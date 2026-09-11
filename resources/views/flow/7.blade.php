@@ -61,9 +61,10 @@
         font-size: 24px;
         font-weight: 700;
         letter-spacing: -1px;
+        color: #fff;
     }
 
-    .logo svg { display: block; width: 28px; height: 28px; }
+    .logo svg { display: block; width: 28px; height: 28px; fill: #fff; }
 
     .nav-links {
         display: flex;
@@ -162,7 +163,7 @@
         justify-content: center;
         width: 16px;
         height: 16px;
-        fill: #1d9bf0;
+        fill: #d9d9d9;
         flex: 0 0 auto;
     }
 
@@ -375,21 +376,80 @@
 
     /* Mobile */
     @media (max-width: 768px) {
+        body {
+            font-size: 13px;
+        }
+
         .topbar {
-            padding: 0 16px;
+            height: 52px;
+            padding: 0 12px;
         }
 
         .nav-links {
             display: none;
         }
 
+        .nav-right {
+            gap: 6px;
+        }
+
+        .nav-btn {
+            padding: 6px 10px;
+            font-size: 11px;
+        }
+
+        .page {
+            min-height: calc(100dvh - 52px);
+            padding: 12px;
+            align-items: stretch;
+        }
+
         .workspace {
-            height: auto;
-            grid-template-columns: 1fr;
+            width: 100%;
+            height: calc(100dvh - 76px);
+            display: block;
+        }
+
+        .profile {
+            display: none;
         }
 
         .chat {
-            height: 500px;
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+        }
+
+        .chat-header {
+            height: 58px;
+            padding: 0 12px;
+        }
+
+        .contact {
+            gap: 9px;
+        }
+
+        .small-avatar {
+            width: 32px;
+            height: 32px;
+        }
+
+        .thread {
+            padding: 12px;
+        }
+
+        .composer {
+            height: 48px;
+            flex-basis: 48px;
+            margin: 0 10px 10px;
+            padding: 0 10px;
+            gap: 8px;
+        }
+
+        .plus {
+            width: 24px;
+            height: 24px;
+            font-size: 14px;
         }
     }
 </style>
@@ -490,7 +550,7 @@
 
             <div class="composer">
                 <div class="plus">+</div>
-                <form method="POST" action="{{ route('messages.store') }}">
+                <form class="message-form" method="POST" action="{{ route('messages.store') }}">
                     @csrf
                     <input class="message-input" name="body" type="text" maxlength="4000" placeholder="Message" required>
                     <button class="send" type="submit" aria-label="Send message">&gt;</button>
@@ -507,6 +567,8 @@
     const typingStatusUrl = @json(route('messages.typing.show'));
     const typingStoreUrl = @json(route('messages.typing.store'));
     const typingToken = document.querySelector('input[name="_token"]').value;
+    const messageForm = document.querySelector('.message-form');
+    const messageInput = messageForm.querySelector('.message-input');
 
     function escapeMessage(value) {
         return String(value).replace(/[&<>'"]/g, character => ({
@@ -546,8 +608,40 @@
         }
     }
 
+    messageForm.addEventListener('submit', async event => {
+        event.preventDefault();
+        const body = messageInput.value.trim();
+        if (!body) return;
+
+        const sendButton = messageForm.querySelector('.send');
+        sendButton.disabled = true;
+        try {
+            const response = await fetch(messageForm.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': typingToken,
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ body }),
+                credentials: 'same-origin',
+            });
+
+            if (!response.ok) throw new Error('Message could not be sent.');
+            messageInput.value = '';
+            await pollMessages();
+        } catch (error) {
+            messageInput.setCustomValidity(error.message);
+            messageInput.reportValidity();
+            messageInput.setCustomValidity('');
+        } finally {
+            sendButton.disabled = false;
+            messageInput.focus();
+        }
+    });
+
     let lastTypingSignal = 0;
-    document.querySelector('.message-input').addEventListener('input', () => {
+    messageInput.addEventListener('input', () => {
         const now = Date.now();
         if (now - lastTypingSignal < 1500) return;
         lastTypingSignal = now;
