@@ -193,7 +193,7 @@
 
         @media (max-width: 768px) {
             .navbar {
-                padding: 20px;
+                padding: 14px 16px;
             }
 
             .nav-left a {
@@ -201,23 +201,32 @@
             }
 
             h1 {
-                font-size: 48px;
+                font-size: 36px;
+                line-height: 1;
+                margin-bottom: 16px;
             }
 
             .hero {
-                padding: 30px;
+                min-height: auto;
+                padding: 24px 16px 32px;
                 flex-direction: column;
                 align-items: center;
-                gap: 36px;
+                gap: 20px;
             }
 
             .content { width: 100%; }
 
-            .content h1 { font-size: 48px; }
+            .content h1 { font-size: 36px; }
+
+            .subtitle {
+                font-size: 16px;
+                line-height: 1.45;
+                margin-bottom: 24px;
+            }
 
             .x-graphic {
                 align-self: center;
-                width: min(300px, 70vw);
+                width: min(180px, 48vw);
                 flex-basis: auto;
                 order: -1;
             }
