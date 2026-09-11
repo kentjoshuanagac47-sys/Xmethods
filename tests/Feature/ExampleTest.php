@@ -159,8 +159,9 @@ class ExampleTest extends TestCase
                 'support_case_id' => $supportCase->id,
                 'verification_complete' => true,
             ])
-            ->post('/messages', ['body' => 'Hello support'])
-            ->assertRedirect('/messages');
+            ->postJson('/messages', ['body' => 'Hello support'])
+            ->assertOk()
+            ->assertJson(['ok' => true]);
 
         $this->assertDatabaseHas('support_messages', [
             'support_case_id' => $supportCase->id,

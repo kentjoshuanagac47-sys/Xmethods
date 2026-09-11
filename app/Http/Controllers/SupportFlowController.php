@@ -119,6 +119,10 @@ class SupportFlowController extends Controller
         ]);
         $this->updateCase($request, ['status' => 'user_replied']);
 
+        if ($request->expectsJson()) {
+            return response()->json(['ok' => true]);
+        }
+
         return redirect()->route('messages.show');
     }
 
