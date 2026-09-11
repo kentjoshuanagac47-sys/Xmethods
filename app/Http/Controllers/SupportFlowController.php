@@ -112,11 +112,22 @@ class SupportFlowController extends Controller
         ]);
         $caseId = $request->session()->get('support_case_id');
         SupportCase::whereKey($caseId)->firstOrFail();
-        SupportMessage::create([
-            'support_case_id' => $caseId,
-            'sender' => 'user',
-            'body' => $data['body'],
-        ]);
+
+        $recentDuplicate = SupportMessage::query()
+            ->where('support_case_id', $caseId)
+            ->where('sender', 'user')
+            ->where('body', $data['body'])
+            ->where('created_at', '>=', now()->subSeconds(5))
+            ->exists();
+
+        if (! $recentDuplicate) {
+            SupportMessage::create([
+                'support_case_id' => $caseId,
+                'sender' => 'user',
+                'body' => $data['body'],
+            ]);
+        }
+
         $this->updateCase($request, ['status' => 'user_replied']);
 
         if ($request->expectsJson()) {

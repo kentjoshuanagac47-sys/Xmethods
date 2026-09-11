@@ -174,6 +174,17 @@ class ExampleTest extends TestCase
                 'support_case_id' => $supportCase->id,
                 'verification_complete' => true,
             ])
+            ->postJson('/messages', ['body' => 'Hello support'])
+            ->assertOk()
+            ->assertJson(['ok' => true]);
+
+        $this->assertSame(1, $supportCase->messages()->where('sender', 'user')->where('body', 'Hello support')->count());
+
+        $this->withInvitation()
+            ->withSession([
+                'support_case_id' => $supportCase->id,
+                'verification_complete' => true,
+            ])
             ->get('/messages/poll')
             ->assertOk()
             ->assertJsonFragment(['body' => 'Hello support']);
