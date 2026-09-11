@@ -68,7 +68,7 @@
     color: #fff;
   }
 
-  .logo svg { display: block; width: 28px; height: 28px; }
+  .logo svg { display: block; width: 28px; height: 28px; fill: #fff; }
 
   .nav-link {
     text-decoration: none;

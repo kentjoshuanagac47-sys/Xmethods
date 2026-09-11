@@ -70,7 +70,7 @@
             font-weight: 700;
         }
 
-        .logo svg { display: block; width: 28px; height: 28px; }
+        .logo svg { display: block; width: 28px; height: 28px; fill: #fff; }
 
         h1 {
             align-self: flex-start;
