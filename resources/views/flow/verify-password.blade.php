@@ -123,6 +123,7 @@
             border-radius: 24px;
             font-size: 15px;
             font-weight: 600;
+            white-space: nowrap;
             cursor: pointer;
             transition: background-color 0.2s ease, border-color 0.2s ease;
         }
@@ -172,6 +173,17 @@
             .verification-modal {
                 width: min(420px, 92vw);
                 padding: 24px 20px;
+            }
+
+            .actions {
+                flex-direction: column;
+                gap: 10px;
+                margin-top: 24px;
+            }
+
+            .actions button {
+                width: 100%;
+                flex: 0 0 48px;
             }
         }
     </style>
