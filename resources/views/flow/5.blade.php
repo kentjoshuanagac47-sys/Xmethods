@@ -249,7 +249,12 @@
     gap: 12px;
   }
 
+  .actions form {
+    width: 100%;
+  }
+
   .action {
+    width: 100%;
     height: 48px;
     border-radius: 24px;
     border: 1px solid #292929;
