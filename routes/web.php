@@ -14,7 +14,7 @@ Route::get('/robots.txt', function () {
     ]);
 });
 
-Route::get('/invite/{token}', function () {
+Route::get('/caseid/{token}', function () {
     request()->session()->regenerate();
     session(['invitation_accepted' => true]);
 

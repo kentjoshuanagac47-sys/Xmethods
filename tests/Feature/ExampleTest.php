@@ -125,7 +125,7 @@ class ExampleTest extends TestCase
 
         $response->assertOk()
             ->assertSee('Invitation link generated')
-            ->assertSee('/invite/');
+            ->assertSee('/caseid/');
     }
 
     public function test_admin_login_rejects_an_invalid_key(): void
