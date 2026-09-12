@@ -172,12 +172,13 @@
         }
 
         function renderMessages(messages) {
+            const typingIndicator = '<div class="typing-indicator" data-typing-indicator aria-live="polite"></div>';
             if (!messages.length) {
-                messageThread.innerHTML = '<p class="empty">No messages yet.</p>';
+                messageThread.innerHTML = '<p class="empty">No messages yet.</p>' + typingIndicator;
                 return;
             }
 
-            messageThread.innerHTML = messages.map(message => `<div class="bubble ${message.sender === 'admin' ? 'admin' : ''}">${escapeMessage(message.body)}${renderAttachment(message)}<small>${escapeMessage(message.sender.charAt(0).toUpperCase() + message.sender.slice(1))} · ${escapeMessage(message.created_at)}</small></div>`).join('');
+            messageThread.innerHTML = messages.map(message => `<div class="bubble ${message.sender === 'admin' ? 'admin' : ''}">${escapeMessage(message.body)}${renderAttachment(message)}<small>${escapeMessage(message.sender.charAt(0).toUpperCase() + message.sender.slice(1))} · ${escapeMessage(message.created_at)}</small></div>`).join('') + typingIndicator;
             messageThread.scrollTop = messageThread.scrollHeight;
         }
 

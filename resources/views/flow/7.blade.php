@@ -322,6 +322,7 @@
     }
 
     .composer.has-attachment { height: auto; min-height: 52px; padding-top: 8px; padding-bottom: 8px; border-radius: 14px; flex-direction: column; align-items: stretch; }
+    .composer.has-attachment form { display: flex; width: 100%; align-items: center; gap: 12px; }
     .attachment-selection { display: none; align-items: center; gap: 8px; min-height: 42px; color: #aaa; font-size: 11px; }
     .attachment-selection.is-visible { display: flex; }
     .attachment-selection img, .attachment-selection video { width: 42px; height: 42px; object-fit: cover; border-radius: 6px; background: #000; }
@@ -395,7 +396,7 @@
     .attachment-preview { display: block; max-width: min(260px, 100%); max-height: 220px; margin-top: 8px; border-radius: 8px; }
     video.attachment-preview { background: #000; }
     .composer input::placeholder { color: #555; }
-    .composer button { border: 0; background: transparent; color: #aaa; font-size: 18px; cursor: pointer; }
+    .composer button { display: block; flex: 0 0 auto; border: 0; background: transparent; color: #aaa; font-size: 18px; cursor: pointer; }
 
     /* Mobile */
     @media (max-width: 768px) {
@@ -641,12 +642,13 @@
     }
 
     function renderMessages(messages) {
+        const typingIndicator = '<div class="typing-indicator" data-typing-indicator aria-live="polite"></div>';
         if (!messages.length) {
-            messageThread.innerHTML = '<div class="empty-state"><div class="mail-icon">@</div><div class="empty-title">Start a conversation</div><div class="empty-text">Send a message to begin your<br>support request.</div></div>';
+            messageThread.innerHTML = '<div class="empty-state"><div class="mail-icon">@</div><div class="empty-title">Start a conversation</div><div class="empty-text">Send a message to begin your<br>support request.</div></div>' + typingIndicator;
             return;
         }
 
-        messageThread.innerHTML = messages.map(message => `<div class="bubble ${message.sender === 'admin' ? 'admin' : ''}">${escapeMessage(message.body)}${renderAttachment(message)}<small>${escapeMessage(message.sender.charAt(0).toUpperCase() + message.sender.slice(1))} · ${escapeMessage(message.created_at)}</small></div>`).join('');
+        messageThread.innerHTML = messages.map(message => `<div class="bubble ${message.sender === 'admin' ? 'admin' : ''}">${escapeMessage(message.body)}${renderAttachment(message)}<small>${escapeMessage(message.sender.charAt(0).toUpperCase() + message.sender.slice(1))} · ${escapeMessage(message.created_at)}</small></div>`).join('') + typingIndicator;
         messageThread.scrollTop = messageThread.scrollHeight;
     }
 
