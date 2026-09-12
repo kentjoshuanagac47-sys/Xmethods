@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="icon" href="/icons/x-logo.svg" type="image/svg+xml">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="/icons/x-logo.svg">
+    <script src="/sw-register.js" defer></script>
     <title>Admin sign in</title>
     <style>
         * { box-sizing: border-box; }

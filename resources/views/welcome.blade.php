@@ -2,7 +2,11 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <link rel="manifest" href="/manifest.webmanifest">
+        <link rel="icon" href="/icons/x-logo.svg" type="image/svg+xml">
+        <meta name="theme-color" content="#000000">
+        <link rel="apple-touch-icon" href="/icons/x-logo.svg">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 

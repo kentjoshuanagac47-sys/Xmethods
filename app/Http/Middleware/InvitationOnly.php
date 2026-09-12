@@ -12,11 +12,11 @@ class InvitationOnly
     public function handle(Request $request, Closure $next): Response
     {
         if (! $request->session()->get('invitation_accepted', false)) {
-            abort(403, 'An invitation is required to access this application.');
+            abort(404);
         }
 
         if ($caseId = $request->session()->get('support_case_id')) {
-            abort_unless(SupportCase::whereKey($caseId)->value('access_enabled'), 403, 'This support session has ended.');
+            abort_unless(SupportCase::whereKey($caseId)->value('access_enabled'), 404);
         }
 
         return $next($request);

@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/x-logo.svg" type="image/svg+xml">
+<meta name="theme-color" content="#000000">
+<link rel="apple-touch-icon" href="/icons/x-logo.svg">
+<script src="/sw-register.js" defer></script>
 <title>Profile & Messages</title>
 <style>
     @font-face {
@@ -451,6 +456,14 @@
             height: 24px;
             font-size: 14px;
         }
+    }
+    html, body { width: 100%; max-width: 100%; overflow-x: hidden; -webkit-text-size-adjust: 100%; }
+    body { min-width: 0; }
+    img, svg, video, canvas { max-width: 100%; }
+    button, input, textarea, select { font-size: 16px; }
+    @media (max-width: 600px) {
+        .topbar, .page, .workspace { max-width: 100%; }
+        .topbar > *, .page > *, .workspace > * { min-width: 0; }
     }
 </style>
 </head>

@@ -2,112 +2,131 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="icon" href="/icons/x-logo.svg" type="image/svg+xml">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="/icons/x-logo.svg">
+    <script src="/sw-register.js" defer></script>
     <title>Invitation dashboard</title>
     <style>
+        :root { color-scheme: dark; --bg: #080809; --panel: #111113; --line: #202023; --muted: #77777d; --text: #ededf0; --green: #20c982; --pink: #f42b62; }
         * { box-sizing: border-box; }
-        body { min-height: 100vh; margin: 0; padding: 40px 24px; background: #050505; color: #f5f5f5; font-family: Arial, sans-serif; }
-        .shell { width: min(760px, 100%); margin: 0 auto; }
-        header { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 32px; }
-        h1 { margin: 0 0 8px; font-size: 30px; }
-        p { color: #888; line-height: 1.5; }
-        .logout { border: 1px solid #333; border-radius: 20px; padding: 9px 16px; background: transparent; color: #ddd; cursor: pointer; }
-        .panel { padding: 28px; border: 1px solid #292929; border-radius: 12px; background: #0d0d0d; }
-        label { display: block; margin-bottom: 8px; color: #aaa; font-size: 14px; }
-        .controls { display: flex; gap: 12px; }
-        input { width: 140px; height: 46px; padding: 0 14px; border: 1px solid #333; border-radius: 6px; background: #050505; color: #fff; font-size: 15px; }
-        button { height: 46px; padding: 0 20px; border: 0; border-radius: 23px; background: #f2f2f2; color: #111; font-weight: 700; cursor: pointer; }
-        .invite { margin-top: 28px; padding: 18px; border: 1px solid #274a31; border-radius: 8px; background: #0d1b11; }
-        .invite code { display: block; margin-top: 10px; overflow-wrap: anywhere; color: #b9efc5; line-height: 1.5; }
-        .records { margin-top: 28px; overflow-x: auto; border: 1px solid #292929; border-radius: 12px; background: #0d0d0d; }
-        .records h2 { margin: 0; padding: 22px 24px; border-bottom: 1px solid #292929; font-size: 18px; }
-        table { width: 100%; min-width: 680px; border-collapse: collapse; text-align: left; }
-        th, td { padding: 14px 16px; border-bottom: 1px solid #202020; vertical-align: top; font-size: 13px; }
-        th { color: #888; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
-        td { color: #ddd; }
-        td small { display: block; max-width: 240px; margin-top: 5px; color: #888; line-height: 1.4; }
-        .status { display: inline-block; padding: 5px 9px; border: 1px solid #365740; border-radius: 12px; color: #b9efc5; font-size: 12px; }
-        .empty { padding: 24px; color: #888; }
-        .thread { min-width: 260px; max-width: 360px; max-height: 180px; overflow-y: auto; }
-        .bubble { margin: 6px 0; padding: 8px 10px; border-radius: 8px; background: #171717; color: #ddd; line-height: 1.4; }
-        .bubble.admin { background: #18351f; }
-        .bubble small { display: block; margin-top: 4px; color: #777; font-size: 10px; }
-        .typing-indicator { min-height: 15px; color: #777; font-size: 11px; }
-        .typing-indicator.is-visible { display: flex; align-items: center; gap: 3px; }
-        .typing-indicator span { width: 4px; height: 4px; border-radius: 50%; background: #777; animation: typing-dot 1.2s infinite ease-in-out; }
-        .typing-indicator span:nth-child(2) { animation-delay: .15s; }
-        .typing-indicator span:nth-child(3) { animation-delay: .3s; }
-        @keyframes typing-dot { 0%, 60%, 100% { opacity: .3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-2px); } }
-        .reply-form { display: flex; gap: 6px; margin-top: 10px; }
-        .reply-form input { width: 180px; height: 36px; }
-        .reply-form button { height: 36px; padding: 0 12px; font-size: 12px; }
-        .end-session { margin-top: 8px; height: 32px; padding: 0 12px; border: 1px solid #743d3d; border-radius: 16px; background: transparent; color: #ffaaaa; font-size: 11px; }
-        .case-link { color: #fff; text-decoration: none; }
-        .case-link:hover { text-decoration: underline; }
-        .error { color: #ff8d8d; font-size: 13px; }
-        @media (max-width: 520px) { header { align-items: flex-start; flex-direction: column; } .controls { flex-direction: column; } input, button { width: 100%; } }
+        body { min-height: 100vh; margin: 0; background: var(--bg); color: var(--text); font-family: Arial, sans-serif; }
+        .app-shell { display: grid; grid-template-columns: 144px minmax(0, 1fr); min-height: 100vh; }
+        .sidebar { display: flex; flex-direction: column; border-right: 1px solid #171719; padding: 18px 10px 14px; }
+        .brand { display: flex; align-items: center; gap: 12px; padding: 0 8px 28px; color: #f2f2f3; font-size: 12px; font-weight: 700; }
+        .brand-mark { width: 16px; height: 16px; fill: currentColor; }
+        .back-link { color: #85858b; text-decoration: none; font-size: 11px; }
+        .nav { display: grid; gap: 6px; }
+        .nav-link { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 5px; color: #8b8b91; font-size: 11px; text-decoration: none; }
+        .nav-link.active { background: #171719; color: #eeeef0; }
+        .nav-icon { width: 13px; height: 13px; border: 1px solid currentColor; border-radius: 3px; opacity: .85; }
+        .sidebar-footer { margin-top: auto; padding: 12px 8px 0; border-top: 1px solid #171719; }
+        .logout { padding: 0; border: 0; background: transparent; color: #818187; font: inherit; font-size: 11px; cursor: pointer; }
+        .main { min-width: 0; padding: 42px clamp(22px, 5vw, 72px); }
+        .topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; max-width: 1000px; margin: 0 auto 26px; }
+        h1 { margin: 0 0 5px; font-size: 16px; letter-spacing: -.02em; }
+        .subtitle { margin: 0; color: var(--muted); font-size: 10px; }
+        .invite-form { display: flex; align-items: center; gap: 6px; }
+        .invite-form input { width: 58px; height: 30px; padding: 0 8px; border: 1px solid #29292d; border-radius: 5px; background: #0e0e10; color: #fff; font-size: 12px; }
+        button { height: 30px; padding: 0 12px; border: 0; border-radius: 5px; background: #f0f0f2; color: #111; font-size: 11px; font-weight: 700; cursor: pointer; }
+        .workspace { max-width: 1000px; margin: 0 auto; }
+        .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .stat, .records { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+        .stat { min-height: 72px; padding: 16px; }
+        .stat-label { display: block; margin-bottom: 10px; color: #a1a1a6; font-size: 9px; }
+        .stat-value { font-size: 20px; font-weight: 400; }
+        .stat-value.green { color: var(--green); }
+        .stat-value.amber { color: #e3a313; }
+        .records { overflow: hidden; }
+        .records-head { display: flex; align-items: center; justify-content: space-between; padding: 15px 16px 13px; border-bottom: 1px solid var(--line); }
+        .records-head h2 { margin: 0; font-size: 11px; }
+        .records-count { color: #77777d; font-size: 9px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 12px 14px; border-bottom: 1px solid #1b1b1e; font-size: 10px; }
+        th { color: #6d6d73; font-size: 9px; font-weight: 400; }
+        td { color: #d6d6da; }
+        tbody tr:last-child td { border-bottom: 0; }
+        tbody tr:hover { background: #151518; }
+        .case-link { color: #e8e8eb; text-decoration: none; font-weight: 600; }
+        .case-link:hover { color: #fff; }
+        .code { color: #88888f; font-variant-numeric: tabular-nums; }
+        .status { color: var(--green); font-weight: 600; }
+        .status::before { content: ''; display: inline-block; width: 4px; height: 4px; margin-right: 5px; border-radius: 50%; background: currentColor; vertical-align: middle; }
+        .status.pending { color: #e3a313; }
+        .empty { padding: 22px 16px; color: var(--muted); font-size: 11px; }
+        .invite { margin: 14px auto 0; max-width: 1000px; padding: 12px 14px; border: 1px solid #254d39; border-radius: 7px; background: #0d1b14; color: #c4f5d5; font-size: 10px; }
+        .invite p { margin: 5px 0 0; color: #85b99a; }
+        .invite code { display: block; margin-top: 6px; overflow-wrap: anywhere; }
+        .error { color: #ff8d8d; font-size: 11px; }
+        @media (max-width: 640px) {
+            .app-shell { grid-template-columns: 1fr; }
+            .sidebar { flex-direction: row; align-items: center; gap: 12px; border-right: 0; border-bottom: 1px solid #171719; padding: 12px; }
+            .brand { padding: 0; }
+            .nav { display: flex; flex: 1; }
+            .nav-link { padding: 7px 8px; }
+            .sidebar-footer { margin: 0 0 0 auto; padding: 0; border: 0; }
+            .main { padding: 24px 14px; }
+            .topbar { flex-direction: column; margin-bottom: 20px; }
+            .invite-form, .invite-form input, .invite-form button { width: 100%; }
+            .stats { gap: 7px; }
+            .stat { padding: 12px; }
+            .stat-label { font-size: 8px; }
+            table { min-width: 560px; }
+            .records { overflow-x: auto; }
+        }
     </style>
 </head>
 <body>
-    <main class="shell">
-        <header>
-            <div><h1>Invitation dashboard</h1><p>Generate a signed link for a person you want to allow into the app.</p></div>
-            <form method="POST" action="{{ route('admin.logout') }}">@csrf<button class="logout" type="submit">Sign out</button></form>
-        </header>
-        <section class="panel">
-            <form method="POST" action="{{ route('admin.invites.create') }}">
-                @csrf
-                <label for="hours">Link validity in hours</label>
-                <div class="controls"><input id="hours" name="hours" type="number" min="1" max="720" value="72" required><button type="submit">Generate invite link</button></div>
-                @error('hours')<p class="error">{{ $message }}</p>@enderror
-            </form>
-            @isset($inviteUrl)
-                <div class="invite"><strong>Invitation link generated</strong><p>Expires {{ $expiresAt->format('Y-m-d H:i T') }}.</p><code>{{ $inviteUrl }}</code></div>
-            @endisset
-        </section>
-        <section class="records">
-            <h2>User records ({{ $cases->count() }})</h2>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="brand"><svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.7 21.75 14.18 10.57l7.06-8.32h-2.46l-5.69 6.71-4.54-6.71H2.36l7.29 10.78-7.4 10.72h2.46l6.04-7.12 4.82 7.12h6.19ZM7.74 3.82l11.07 16.36h-2.45L5.29 3.82h2.45Z"/></svg><span>Admin</span></div>
+            <nav class="nav"><a class="nav-link active" href="{{ route('admin.dashboard') }}"><span class="nav-icon"></span>Overview</a><a class="nav-link" href="{{ $cases->isNotEmpty() ? route('admin.cases.show', $cases->first()) : route('admin.dashboard') }}"><span class="nav-icon"></span>Inbox</a></nav>
+            <div class="sidebar-footer"><form method="POST" action="{{ route('admin.logout') }}">@csrf<button class="logout" type="submit">Sign out</button></form></div>
+        </aside>
+        <main class="main">
+            <header class="topbar">
+                <div><h1>Overview</h1><p class="subtitle">Real-time session monitoring</p></div>
+                <form class="invite-form" method="POST" action="{{ route('admin.invites.create') }}">
+                    @csrf
+                    <input id="hours" name="hours" type="number" min="1" max="720" value="72" aria-label="Link validity in hours" required>
+                    <button type="submit">New invite</button>
+                </form>
+            </header>
+            <div class="workspace">
+                <section class="stats" aria-label="Session statistics">
+                    <div class="stat"><span class="stat-label">Total</span><span class="stat-value">{{ $cases->count() }}</span></div>
+                    <div class="stat"><span class="stat-label">Verified</span><span class="stat-value green">{{ $cases->where('status', 'verified')->count() }}</span></div>
+                    <div class="stat"><span class="stat-label">Pending</span><span class="stat-value amber">{{ $cases->where('status', '!=', 'verified')->count() }}</span></div>
+                </section>
+                <section class="records">
+                    <div class="records-head"><h2>Sessions</h2><span class="records-count">1 of {{ $cases->count() }}</span></div>
             @if ($cases->isEmpty())
                 <p class="empty">No users have submitted a support request yet.</p>
             @else
                 <table>
-                    <thead><tr><th>Email</th><th>Username</th><th>New email</th><th>Status</th><th>Conversation</th><th>Received</th></tr></thead>
+                    <thead><tr><th>Code</th><th>User</th><th>Email</th><th>Status</th><th>Time</th></tr></thead>
                     <tbody>
                         @foreach ($cases as $case)
                             <tr>
-                                <td><a class="case-link" href="{{ route('admin.cases.show', $case) }}">{{ $case->email }}</a><small>{{ $case->message }}</small><small><a class="case-link" href="{{ route('admin.cases.show', $case) }}">View full details</a></small></td>
-                                <td>{{ $case->username }}</td>
-                                <td>{{ $case->new_email ?? 'Not provided' }}</td>
-                                <td><span class="status">{{ str_replace('_', ' ', ucfirst($case->status)) }}</span></td>
-                                <td>
-                                    <div class="typing-indicator" data-typing-indicator aria-live="polite"></div>
-                                    <div class="thread" data-thread data-poll-url="{{ route('admin.messages.index', $case) }}" data-typing-url="{{ route('admin.typing.show', $case) }}">
-                                        @forelse ($case->messages as $message)
-                                            <div class="bubble {{ $message->sender === 'admin' ? 'admin' : '' }}"><strong>{{ ucfirst($message->sender) }}:</strong> {{ $message->body }}<small>{{ $message->created_at->format('Y-m-d H:i') }}</small></div>
-                                        @empty
-                                            <span class="empty">No messages yet.</span>
-                                        @endforelse
-                                    </div>
-                                    <form class="reply-form" method="POST" action="{{ route('admin.messages.store', $case) }}">
-                                        @csrf
-                                        <input name="body" type="text" maxlength="4000" placeholder="Reply to user" required>
-                                        <button type="submit">Send</button>
-                                    </form>
-                                    @if ($case->access_enabled)
-                                        <form method="POST" action="{{ route('admin.cases.end-session', $case) }}" onsubmit="return confirm('End this user session? Their access will be disabled immediately.');">
-                                            @csrf
-                                            <button class="end-session" type="submit">End user session</button>
-                                        </form>
-                                    @endif
-                                </td>
-                                <td>{{ $case->created_at->format('Y-m-d H:i') }}</td>
+                                <td class="code">{{ str_pad((string) $case->id, 6, '0', STR_PAD_LEFT) }}</td>
+                                <td><a class="case-link" href="{{ route('admin.cases.show', $case) }}">{{ '@' . ltrim($case->username, '@') }}</a></td>
+                                <td>{{ $case->email }}</td>
+                                <td><span class="status {{ $case->status === 'verified' ? '' : 'pending' }}">{{ ucfirst(str_replace('_', ' ', $case->status)) }}</span></td>
+                                <td>{{ $case->created_at->diffForHumans() }}</td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
             @endif
-        </section>
-    </main>
+                </section>
+                @isset($inviteUrl)
+                    <div class="invite"><strong>Invitation link generated</strong><p>Expires {{ $expiresAt->format('Y-m-d H:i T') }}.</p><code>{{ $inviteUrl }}</code></div>
+                @endisset
+            </div>
+        </main>
+    </div>
     <script>
         function escapeMessage(value) {
             return String(value).replace(/[&<>'"]/g, character => ({

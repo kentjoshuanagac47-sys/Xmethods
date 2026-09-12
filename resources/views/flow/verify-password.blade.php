@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="icon" href="/icons/x-logo.svg" type="image/svg+xml">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="/icons/x-logo.svg">
+    <script src="/sw-register.js" defer></script>
     <title>Verify your password</title>
     <style>
         @font-face {
@@ -186,7 +191,15 @@
                 flex: 0 0 48px;
             }
         }
-    </style>
+        html, body { width: 100%; max-width: 100%; overflow-x: hidden; -webkit-text-size-adjust: 100%; }
+        body { min-width: 0; }
+        img, svg, video, canvas { max-width: 100%; }
+        button, input, textarea, select { font-size: 16px; }
+        @media (max-width: 600px) {
+            .navbar, .container, .card { max-width: 100%; }
+            .navbar > *, .container > *, .card > * { min-width: 0; }
+        }
+        </style>
 </head>
 <body>
     <main class="verification-modal" aria-labelledby="title">

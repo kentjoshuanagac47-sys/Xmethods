@@ -2,81 +2,106 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="icon" href="/icons/x-logo.svg" type="image/svg+xml">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="/icons/x-logo.svg">
+    <script src="/sw-register.js" defer></script>
     <title>User details</title>
     <style>
+        :root { color-scheme: dark; --bg: #080809; --panel: #111113; --line: #202023; --muted: #77777d; --text: #ededf0; --pink: #f42b62; }
         * { box-sizing: border-box; }
-        body { min-height: 100vh; margin: 0; padding: 40px 24px; background: #050505; color: #f5f5f5; font-family: Arial, sans-serif; }
-        .shell { width: min(900px, 100%); margin: 0 auto; }
-        .top { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; }
-        h1, h2, p { margin-top: 0; }
-        h1 { margin-bottom: 8px; font-size: 30px; }
-        h2 { margin-bottom: 18px; font-size: 18px; }
-        p { color: #888; line-height: 1.5; }
-        .back { color: #bbb; text-decoration: none; }
-        .back:hover { color: #fff; }
-        .panel { margin-bottom: 20px; padding: 24px; border: 1px solid #292929; border-radius: 12px; background: #0d0d0d; }
-        .details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
-        .detail label { display: block; margin-bottom: 6px; color: #777; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
-        .detail strong { color: #eee; font-size: 15px; font-weight: 500; overflow-wrap: anywhere; }
-        .status { display: inline-block; padding: 5px 9px; border: 1px solid #365740; border-radius: 12px; color: #b9efc5; font-size: 12px; }
-        .thread { display: flex; flex-direction: column; gap: 10px; max-height: 440px; min-height: 120px; padding: 4px 0; overflow-y: auto; }
-        .bubble { align-self: flex-start; max-width: 78%; padding: 11px 13px; border-radius: 10px 10px 10px 3px; background: #191919; color: #ddd; line-height: 1.45; overflow-wrap: anywhere; }
-        .bubble.admin { align-self: flex-end; border-radius: 10px 10px 3px 10px; background: #18351f; }
-        .bubble small { display: block; margin-top: 5px; color: #777; font-size: 10px; }
-        .typing-indicator { min-height: 16px; margin: -10px 0 10px; color: #777; font-size: 11px; }
+        body { min-height: 100vh; margin: 0; background: var(--bg); color: var(--text); font-family: Arial, sans-serif; }
+        .app-shell { display: grid; grid-template-columns: 144px minmax(0, 1fr); min-height: 100vh; }
+        .sidebar { display: flex; flex-direction: column; border-right: 1px solid #171719; padding: 18px 10px 14px; }
+        .brand { display: flex; align-items: center; gap: 12px; padding: 0 8px 28px; color: #f2f2f3; font-size: 12px; font-weight: 700; }
+        .brand-mark { width: 16px; height: 16px; fill: currentColor; }
+        .back-link { color: #85858b; text-decoration: none; font-size: 11px; }
+        .nav { display: grid; gap: 6px; }
+        .nav-link { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 5px; color: #8b8b91; font-size: 11px; text-decoration: none; }
+        .nav-link.active { background: #171719; color: #eeeef0; }
+        .nav-icon { width: 13px; height: 13px; border: 1px solid currentColor; border-radius: 3px; opacity: .85; }
+        .sidebar-footer { margin-top: auto; padding: 12px 8px 0; border-top: 1px solid #171719; }
+        .logout { padding: 0; border: 0; background: transparent; color: #818187; font: inherit; font-size: 11px; cursor: pointer; }
+        .main { min-width: 0; padding: 38px 22px 22px; }
+        .inbox { display: grid; grid-template-columns: 178px minmax(0, 1fr); width: min(1050px, 100%); height: calc(100vh - 60px); min-height: 560px; margin: 0 auto; border: 1px solid #1c1c1f; border-radius: 10px; overflow: hidden; background: var(--panel); }
+        .conversation-list { border-right: 1px solid var(--line); }
+        .inbox-title { padding: 15px 14px 13px; border-bottom: 1px solid var(--line); }
+        .inbox-title h1 { margin: 0 0 4px; font-size: 14px; }
+        .inbox-title p { margin: 0; color: var(--muted); font-size: 9px; }
+        .conversation { display: flex; align-items: center; gap: 9px; padding: 12px 10px; border-bottom: 1px solid #1b1b1e; background: #151517; }
+        .avatar { display: grid; width: 27px; height: 27px; flex: 0 0 auto; place-items: center; border-radius: 50%; background: #2a2a2d; color: #bcbcc1; font-size: 10px; font-weight: 700; }
+        .conversation strong { display: block; overflow: hidden; color: #e2e2e5; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+        .conversation span { display: block; margin-top: 3px; overflow: hidden; color: #77777d; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+        .unread { width: 6px; height: 6px; margin-left: auto; border-radius: 50%; background: var(--pink); }
+        .chat { display: grid; grid-template-rows: 57px minmax(0, 1fr) 54px; min-width: 0; }
+        .chat-header { display: flex; align-items: center; justify-content: space-between; padding: 0 18px; border-bottom: 1px solid var(--line); }
+        .chat-header h2 { margin: 0 0 4px; font-size: 12px; }
+        .chat-header p { margin: 0; color: var(--muted); font-size: 9px; }
+        .back { color: #85858b; font-size: 10px; text-decoration: none; }
+        .thread { display: flex; flex-direction: column; gap: 10px; min-height: 0; padding: 18px; overflow-y: auto; }
+        .bubble { align-self: flex-start; max-width: 72%; padding: 10px 12px; border-radius: 9px 9px 9px 2px; background: #1a1a1c; color: #d8d8dc; font-size: 11px; line-height: 1.45; overflow-wrap: anywhere; }
+        .bubble.admin { align-self: flex-end; border-radius: 9px 9px 2px 9px; background: #183520; }
+        .bubble small { display: block; margin-top: 5px; color: #77777d; font-size: 9px; }
+        .typing-indicator { min-height: 14px; color: #777; font-size: 10px; }
         .typing-indicator.is-visible { display: flex; align-items: center; gap: 3px; }
         .typing-indicator span { width: 4px; height: 4px; border-radius: 50%; background: #777; animation: typing-dot 1.2s infinite ease-in-out; }
         .typing-indicator span:nth-child(2) { animation-delay: .15s; }
         .typing-indicator span:nth-child(3) { animation-delay: .3s; }
         @keyframes typing-dot { 0%, 60%, 100% { opacity: .3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-2px); } }
-        .empty { color: #888; }
-        .reply { display: flex; gap: 10px; margin-top: 20px; }
-        .reply input { flex: 1; min-width: 0; height: 44px; padding: 0 13px; border: 1px solid #333; border-radius: 22px; outline: 0; background: #050505; color: #fff; }
-        .end-session { height: 36px; margin-top: 12px; padding: 0 14px; border: 1px solid #743d3d; border-radius: 18px; background: transparent; color: #ffaaaa; font-size: 12px; }
-        button { height: 44px; padding: 0 20px; border: 0; border-radius: 22px; background: #f2f2f2; color: #111; font-weight: 700; cursor: pointer; }
-        .error { color: #ff8d8d; font-size: 13px; }
-        @media (max-width: 560px) { body { padding: 24px 16px; } .top { align-items: flex-start; flex-direction: column; } .details { grid-template-columns: 1fr; } .reply { flex-direction: column; } button { width: 100%; } }
+        .reply { display: flex; gap: 8px; align-items: center; margin: 0 12px 12px; padding: 0 10px; border: 1px solid #29292d; border-radius: 7px; background: #0e0e10; }
+        .reply input { flex: 1; min-width: 0; height: 38px; padding: 0; border: 0; outline: 0; background: transparent; color: #fff; font-size: 12px; }
+        .reply button { height: 28px; padding: 0 11px; border: 0; border-radius: 5px; background: #e9e9eb; color: #111; font-size: 10px; font-weight: 700; }
+        .end-session { height: 28px; margin: 0 18px 12px; padding: 0 10px; border: 1px solid #743d3d; border-radius: 5px; background: transparent; color: #ffaaaa; font-size: 10px; }
+        .details { display: none; }
+        .error { margin: 0 18px 12px; color: #ff8d8d; font-size: 10px; }
+        .empty { color: #77777d; font-size: 11px; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+        @media (max-width: 680px) {
+            .app-shell { grid-template-columns: 1fr; }
+            .sidebar { flex-direction: row; align-items: center; gap: 12px; border-right: 0; border-bottom: 1px solid #171719; padding: 12px; }
+            .brand { padding: 0; }
+            .nav { display: flex; flex: 1; }
+            .nav-link { padding: 7px 8px; }
+            .sidebar-footer { margin: 0 0 0 auto; padding: 0; border: 0; }
+            .main { padding: 12px; }
+            .inbox { grid-template-columns: 1fr; height: calc(100vh - 96px); min-height: 480px; }
+            .conversation-list { border-right: 0; border-bottom: 1px solid var(--line); }
+            .conversation { padding: 9px 12px; }
+            .chat { min-height: 360px; }
+        }
     </style>
 </head>
 <body>
-    <main class="shell">
-        <header class="top">
-            <div>
-                <h1>User details</h1>
-                <p>Full support case and conversation history.</p>
-            </div>
-            <a class="back" href="{{ route('admin.dashboard') }}">Back to records</a>
-        </header>
-
-        <section class="panel">
-            <h2>Case information</h2>
-            <div class="details">
-                <div class="detail"><label>Email</label><strong>{{ $supportCase->email }}</strong></div>
-                <div class="detail"><label>Username</label><strong>{{ $supportCase->username }}</strong></div>
-                <div class="detail"><label>New email</label><strong>{{ $supportCase->new_email ?? 'Not provided' }}</strong></div>
-                <div class="detail"><label>Status</label><strong><span class="status">{{ str_replace('_', ' ', ucfirst($supportCase->status)) }}</span></strong></div>
-                <div class="detail"><label>Received</label><strong>{{ $supportCase->created_at->format('Y-m-d H:i') }}</strong></div>
-                <div class="detail"><label>Last updated</label><strong>{{ $supportCase->updated_at->format('Y-m-d H:i') }}</strong></div>
-            </div>
-            <div class="detail" style="margin-top: 18px"><label>Original message</label><strong>{{ $supportCase->message }}</strong></div>
-        </section>
-
-        <section class="panel">
-            <h2>Conversation</h2>
-            <div class="typing-indicator" data-typing-indicator aria-live="polite"></div>
-            <div class="thread" data-thread>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="brand"><svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.7 21.75 14.18 10.57l7.06-8.32h-2.46l-5.69 6.71-4.54-6.71H2.36l7.29 10.78-7.4 10.72h2.46l6.04-7.12 4.82 7.12h6.19ZM7.74 3.82l11.07 16.36h-2.45L5.29 3.82h2.45Z"/></svg><span>Admin</span></div>
+            <nav class="nav"><a class="nav-link" href="{{ route('admin.dashboard') }}"><span class="nav-icon"></span>Overview</a><a class="nav-link active" href="{{ route('admin.cases.show', $supportCase) }}"><span class="nav-icon"></span>Inbox</a></nav>
+            <div class="sidebar-footer"><form method="POST" action="{{ route('admin.logout') }}">@csrf<button class="logout" type="submit">Sign out</button></form></div>
+        </aside>
+        <main class="main">
+            <section class="inbox">
+                <aside class="conversation-list">
+                    <div class="inbox-title"><h1>Inbox <span class="sr-only">User details</span></h1><p>1 current message</p><span class="sr-only">Full case details.</span></div>
+                    <div class="conversation"><div class="avatar">{{ strtoupper(substr($supportCase->username, 0, 1)) }}</div><div><strong>{{ '@' . ltrim($supportCase->username, '@') }}</strong><span>{{ $supportCase->email }}</span></div><span class="unread"></span></div>
+                </aside>
+                <section class="chat">
+                    <header class="chat-header"><div><h2>{{ '@' . ltrim($supportCase->username, '@') }}</h2><p>{{ $supportCase->email }}</p></div><a class="back" href="{{ route('admin.dashboard') }}">Back</a></header>
+                    <div class="thread" data-thread>
                 @forelse ($supportCase->messages as $message)
                     <div class="bubble {{ $message->sender === 'admin' ? 'admin' : '' }}">{{ $message->body }}<small>{{ ucfirst($message->sender) }} · {{ $message->created_at->format('Y-m-d H:i') }}</small></div>
                 @empty
                     <p class="empty">No messages yet.</p>
                 @endforelse
-            </div>
-            <form class="reply" method="POST" action="{{ route('admin.messages.store', $supportCase) }}">
+                    </div>
+                    <div>
+                        <div class="typing-indicator" data-typing-indicator aria-live="polite"></div>
+                        <form class="reply" method="POST" action="{{ route('admin.messages.store', $supportCase) }}">
                 @csrf
                 <input name="body" type="text" maxlength="4000" placeholder="Reply to user" required>
-                <button type="submit">Send reply</button>
-            </form>
+                            <button type="submit">Send</button>
+                        </form>
             @error('body')<p class="error">{{ $message }}</p>@enderror
             @if ($supportCase->access_enabled)
                 <form method="POST" action="{{ route('admin.cases.end-session', $supportCase) }}" onsubmit="return confirm('End this user session? Their access will be disabled immediately.');">
@@ -86,8 +111,11 @@
             @else
                 <p class="error">This user session has ended. Their access is disabled.</p>
             @endif
-        </section>
-    </main>
+                    </div>
+                </section>
+            </section>
+        </main>
+    </div>
     <script>
         const messageThread = document.querySelector('[data-thread]');
         const messagePollUrl = @json(route('admin.messages.index', $supportCase));

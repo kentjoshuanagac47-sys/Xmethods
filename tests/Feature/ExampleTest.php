@@ -74,11 +74,11 @@ class ExampleTest extends TestCase
             ->assertSeeText("User-agent: *\nDisallow: /");
     }
 
-    public function test_direct_access_without_an_invitation_is_forbidden(): void
+    public function test_direct_access_without_an_invitation_is_not_found(): void
     {
         $response = $this->withHeaders($this->browserHeaders)->get('/');
 
-        $response->assertForbidden();
+        $response->assertNotFound();
     }
 
     public function test_signed_invitation_grants_access(): void
@@ -273,7 +273,7 @@ class ExampleTest extends TestCase
         $this->withInvitation()
             ->withSession(['support_case_id' => $supportCase->id])
             ->get('/messages/poll')
-            ->assertForbidden();
+            ->assertNotFound();
     }
 
     private function withInvitation(): static
