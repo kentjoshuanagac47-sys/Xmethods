@@ -44,9 +44,9 @@
         .bubble { align-self: flex-start; max-width: 72%; padding: 10px 12px; border-radius: 9px 9px 9px 2px; background: #1a1a1c; color: #d8d8dc; font-size: 11px; line-height: 1.45; overflow-wrap: anywhere; }
         .bubble.admin { align-self: flex-end; border-radius: 9px 9px 2px 9px; background: #183520; }
         .bubble small { display: block; margin-top: 5px; color: #77777d; font-size: 9px; }
-        .typing-indicator { min-height: 14px; color: #777; font-size: 10px; }
-        .typing-indicator.is-visible { display: flex; align-items: center; gap: 3px; }
-        .typing-indicator span { width: 4px; height: 4px; border-radius: 50%; background: #777; animation: typing-dot 1.2s infinite ease-in-out; }
+        .typing-indicator { display: none; align-items: center; justify-content: center; gap: 3px; width: 42px; height: 24px; margin: 0 12px 6px; border-radius: 999px; background: #2b2b2d; }
+        .typing-indicator.is-visible { display: flex; }
+        .typing-indicator span { width: 4px; height: 4px; border-radius: 50%; background: #aaa; animation: typing-dot 1.2s infinite ease-in-out; }
         .typing-indicator span:nth-child(2) { animation-delay: .15s; }
         .typing-indicator span:nth-child(3) { animation-delay: .3s; }
         @keyframes typing-dot { 0%, 60%, 100% { opacity: .3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-2px); } }

@@ -241,13 +241,19 @@
     }
 
     .typing-indicator {
-        min-height: 16px;
-        color: #777;
-        font-size: 11px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        width: 42px;
+        height: 24px;
+        margin-top: 6px;
+        border-radius: 999px;
+        background: #2b2b2d;
     }
 
-    .typing-indicator.is-visible { display: flex; align-items: center; gap: 3px; }
-    .typing-indicator span { width: 4px; height: 4px; border-radius: 50%; background: #777; animation: typing-dot 1.2s infinite ease-in-out; }
+    .typing-indicator.is-visible { display: flex; }
+    .typing-indicator span { width: 4px; height: 4px; border-radius: 50%; background: #aaa; animation: typing-dot 1.2s infinite ease-in-out; }
     .typing-indicator span:nth-child(2) { animation-delay: .15s; }
     .typing-indicator span:nth-child(3) { animation-delay: .3s; }
     @keyframes typing-dot { 0%, 60%, 100% { opacity: .3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-2px); } }
