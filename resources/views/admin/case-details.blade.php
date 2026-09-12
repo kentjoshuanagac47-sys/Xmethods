@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
     <link rel="manifest" href="/manifest.webmanifest">
-    <link rel="icon" href="/icons/x-logo.svg" type="image/svg+xml">
+    <link rel="icon" href="/icons/app-logo.png" type="image/png">
     <meta name="theme-color" content="#000000">
-    <link rel="apple-touch-icon" href="/icons/x-logo.svg">
+    <link rel="apple-touch-icon" href="/icons/app-logo.png">
     <script src="/sw-register.js" defer></script>
     <title>User details</title>
     <style>
@@ -52,7 +52,11 @@
         @keyframes typing-dot { 0%, 60%, 100% { opacity: .3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-2px); } }
         .reply { display: flex; gap: 8px; align-items: center; margin: 0 12px 12px; padding: 0 10px; border: 1px solid #29292d; border-radius: 7px; background: #0e0e10; }
         .reply input { flex: 1; min-width: 0; height: 38px; padding: 0; border: 0; outline: 0; background: transparent; color: #fff; font-size: 12px; }
+        .reply input[type="file"] { display: none; }
+        .attach { display: grid; width: 22px; height: 22px; place-items: center; color: #aaa; cursor: pointer; font-size: 17px; }
         .reply button { height: 28px; padding: 0 11px; border: 0; border-radius: 5px; background: #e9e9eb; color: #111; font-size: 10px; font-weight: 700; }
+        .attachment-preview { display: block; max-width: min(260px, 100%); max-height: 220px; margin-top: 8px; border-radius: 8px; }
+        video.attachment-preview { background: #000; }
         .end-session { height: 28px; margin: 0 18px 12px; padding: 0 10px; border: 1px solid #743d3d; border-radius: 5px; background: transparent; color: #ffaaaa; font-size: 10px; }
         .details { display: none; }
         .error { margin: 0 18px 12px; color: #ff8d8d; font-size: 10px; }
@@ -90,16 +94,18 @@
                     <header class="chat-header"><div><h2>{{ '@' . ltrim($supportCase->username, '@') }}</h2><p>{{ $supportCase->email }}</p></div><a class="back" href="{{ route('admin.dashboard') }}">Back</a></header>
                     <div class="thread" data-thread>
                 @forelse ($supportCase->messages as $message)
-                    <div class="bubble {{ $message->sender === 'admin' ? 'admin' : '' }}">{{ $message->body }}<small>{{ ucfirst($message->sender) }} · {{ $message->created_at->format('Y-m-d H:i') }}</small></div>
+                    <div class="bubble {{ $message->sender === 'admin' ? 'admin' : '' }}">{{ $message->body }}@if ($message->attachment_path) @if (str_starts_with($message->attachment_mime, 'image/'))<img class="attachment-preview" src="{{ route('admin.messages.attachment', [$supportCase, $message]) }}" alt="Image attachment">@else<video class="attachment-preview" src="{{ route('admin.messages.attachment', [$supportCase, $message]) }}" controls preload="metadata"></video>@endif @endif<small>{{ ucfirst($message->sender) }} · {{ $message->created_at->format('Y-m-d H:i') }}</small></div>
                 @empty
                     <p class="empty">No messages yet.</p>
                 @endforelse
                     </div>
                     <div>
                         <div class="typing-indicator" data-typing-indicator aria-live="polite"></div>
-                        <form class="reply" method="POST" action="{{ route('admin.messages.store', $supportCase) }}">
+                        <form class="reply" method="POST" action="{{ route('admin.messages.store', $supportCase) }}" enctype="multipart/form-data">
                 @csrf
-                <input name="body" type="text" maxlength="4000" placeholder="Reply to user" required>
+                    <label class="attach" for="admin-attachment" aria-label="Add an image or video">+</label>
+                    <input id="admin-attachment" name="attachment" type="file" accept="image/*,video/*">
+                    <input name="body" type="text" maxlength="4000" placeholder="Reply to user">
                             <button type="submit">Send</button>
                         </form>
             @error('body')<p class="error">{{ $message }}</p>@enderror
@@ -135,8 +141,16 @@
                 return;
             }
 
-            messageThread.innerHTML = messages.map(message => `<div class="bubble ${message.sender === 'admin' ? 'admin' : ''}">${escapeMessage(message.body)}<small>${escapeMessage(message.sender.charAt(0).toUpperCase() + message.sender.slice(1))} · ${escapeMessage(message.created_at)}</small></div>`).join('');
+            messageThread.innerHTML = messages.map(message => `<div class="bubble ${message.sender === 'admin' ? 'admin' : ''}">${escapeMessage(message.body)}${renderAttachment(message)}<small>${escapeMessage(message.sender.charAt(0).toUpperCase() + message.sender.slice(1))} · ${escapeMessage(message.created_at)}</small></div>`).join('');
             messageThread.scrollTop = messageThread.scrollHeight;
+        }
+
+        function renderAttachment(message) {
+            if (!message.attachment_url) return '';
+            const url = escapeMessage(message.attachment_url);
+            return message.attachment_type.startsWith('image/')
+                ? `<img class="attachment-preview" src="${url}" alt="Image attachment">`
+                : `<video class="attachment-preview" src="${url}" controls preload="metadata"></video>`;
         }
 
         async function pollMessages() {
@@ -162,7 +176,7 @@
         }
 
         let lastTypingSignal = 0;
-        document.querySelector('.reply input').addEventListener('input', () => {
+        document.querySelector('.reply input[name="body"]').addEventListener('input', () => {
             const now = Date.now();
             if (now - lastTypingSignal < 1500) return;
             lastTypingSignal = now;

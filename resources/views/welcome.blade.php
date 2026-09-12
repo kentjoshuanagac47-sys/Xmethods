@@ -4,9 +4,9 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
         <link rel="manifest" href="/manifest.webmanifest">
-        <link rel="icon" href="/icons/x-logo.svg" type="image/svg+xml">
+        <link rel="icon" href="/icons/app-logo.png" type="image/png">
         <meta name="theme-color" content="#000000">
-        <link rel="apple-touch-icon" href="/icons/x-logo.svg">
+        <link rel="apple-touch-icon" href="/icons/app-logo.png">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 

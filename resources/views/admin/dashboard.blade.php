@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
     <link rel="manifest" href="/manifest.webmanifest">
-    <link rel="icon" href="/icons/x-logo.svg" type="image/svg+xml">
+    <link rel="icon" href="/icons/app-logo.png" type="image/png">
     <meta name="theme-color" content="#000000">
-    <link rel="apple-touch-icon" href="/icons/x-logo.svg">
+    <link rel="apple-touch-icon" href="/icons/app-logo.png">
     <script src="/sw-register.js" defer></script>
     <title>Invitation dashboard</title>
     <style>
@@ -49,6 +49,8 @@
         td { color: #d6d6da; }
         tbody tr:last-child td { border-bottom: 0; }
         tbody tr:hover { background: #151518; }
+        .session-row { cursor: pointer; }
+        .session-row:focus-visible { outline: 2px solid #f0f0f2; outline-offset: -2px; }
         .case-link { color: #e8e8eb; text-decoration: none; font-weight: 600; }
         .case-link:hover { color: #fff; }
         .code { color: #88888f; font-variant-numeric: tabular-nums; }
@@ -60,6 +62,21 @@
         .invite p { margin: 5px 0 0; color: #85b99a; }
         .invite code { display: block; margin-top: 6px; overflow-wrap: anywhere; }
         .error { color: #ff8d8d; font-size: 11px; }
+        .modal { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 20px; background: rgba(0, 0, 0, .72); }
+        .modal[hidden] { display: none; }
+        .modal-card { width: min(430px, 100%); border: 1px solid #2a2a2e; border-radius: 10px; background: #121214; box-shadow: 0 24px 80px rgba(0, 0, 0, .55); }
+        .modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 18px; border-bottom: 1px solid var(--line); }
+        .modal-head h2 { margin: 0 0 5px; font-size: 15px; }
+        .modal-head p { margin: 0; color: var(--muted); font-size: 10px; }
+        .modal-close { width: 26px; height: 26px; padding: 0; border: 1px solid #343438; border-radius: 50%; background: transparent; color: #aaa; font-size: 16px; line-height: 1; }
+        .modal-body { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 18px; }
+        .detail-label { display: block; margin-bottom: 5px; color: #707077; font-size: 9px; text-transform: uppercase; letter-spacing: .05em; }
+        .detail-value { color: #e4e4e7; font-size: 11px; overflow-wrap: anywhere; }
+        .detail-wide { grid-column: 1 / -1; }
+        .detail-message { min-height: 45px; padding: 10px; border: 1px solid #242428; border-radius: 6px; background: #0d0d0f; line-height: 1.45; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 0 18px 18px; }
+        .modal-actions .cancel { border: 1px solid #343438; background: transparent; color: #ccc; }
+        .modal-actions .end-session { height: 30px; margin: 0; border: 1px solid #743d3d; background: transparent; color: #ffaaaa; }
         @media (max-width: 640px) {
             .app-shell { grid-template-columns: 1fr; }
             .sidebar { flex-direction: row; align-items: center; gap: 12px; border-right: 0; border-bottom: 1px solid #171719; padding: 12px; }
@@ -109,7 +126,7 @@
                     <thead><tr><th>Code</th><th>User</th><th>Email</th><th>Status</th><th>Time</th></tr></thead>
                     <tbody>
                         @foreach ($cases as $case)
-                            <tr>
+                            <tr class="session-row" tabindex="0" data-user="{{ $case->username }}" data-email="{{ $case->email }}" data-new-email="{{ $case->new_email ?? 'Not provided' }}" data-status="{{ str_replace('_', ' ', ucfirst($case->status)) }}" data-time="{{ $case->created_at->format('Y-m-d H:i') }}" data-message="{{ $case->message }}" data-end-url="{{ route('admin.cases.end-session', $case) }}">
                                 <td class="code">{{ str_pad((string) $case->id, 6, '0', STR_PAD_LEFT) }}</td>
                                 <td><a class="case-link" href="{{ route('admin.cases.show', $case) }}">{{ '@' . ltrim($case->username, '@') }}</a></td>
                                 <td>{{ $case->email }}</td>
@@ -127,7 +144,70 @@
             </div>
         </main>
     </div>
+    <div class="modal" id="session-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+        <section class="modal-card">
+            <header class="modal-head">
+                <div><h2 id="modal-title">User details</h2><p id="modal-email"></p></div>
+                <button class="modal-close" type="button" data-close-modal aria-label="Close details">&times;</button>
+            </header>
+            <div class="modal-body">
+                <div><span class="detail-label">Username</span><span class="detail-value" id="modal-user"></span></div>
+                <div><span class="detail-label">Status</span><span class="detail-value" id="modal-status"></span></div>
+                <div><span class="detail-label">New email</span><span class="detail-value" id="modal-new-email"></span></div>
+                <div><span class="detail-label">Received</span><span class="detail-value" id="modal-time"></span></div>
+                <div class="detail-wide"><span class="detail-label">Original message</span><div class="detail-value detail-message" id="modal-message"></div></div>
+            </div>
+            <div class="modal-actions">
+                <button class="cancel" type="button" data-close-modal>Cancel</button>
+                <form id="modal-end-form" method="POST">
+                    @csrf
+                    <button class="end-session" type="submit" onclick="return confirm('End this user session? Their access will be disabled immediately.');">End session</button>
+                </form>
+            </div>
+        </section>
+    </div>
     <script>
+        const sessionModal = document.querySelector('#session-modal');
+        const modalEndForm = document.querySelector('#modal-end-form');
+
+        function closeSessionModal() {
+            sessionModal.hidden = true;
+            document.body.style.overflow = '';
+        }
+
+        function openSessionModal(row) {
+            document.querySelector('#modal-user').textContent = row.dataset.user;
+            document.querySelector('#modal-email').textContent = row.dataset.email;
+            document.querySelector('#modal-status').textContent = row.dataset.status;
+            document.querySelector('#modal-new-email').textContent = row.dataset.newEmail;
+            document.querySelector('#modal-time').textContent = row.dataset.time;
+            document.querySelector('#modal-message').textContent = row.dataset.message;
+            modalEndForm.action = row.dataset.endUrl;
+            sessionModal.hidden = false;
+            document.body.style.overflow = 'hidden';
+            document.querySelector('[data-close-modal]').focus();
+        }
+
+        document.querySelectorAll('.session-row').forEach(row => {
+            row.addEventListener('click', event => {
+                if (event.target.closest('a, button, form')) return;
+                openSessionModal(row);
+            });
+            row.addEventListener('keydown', event => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    openSessionModal(row);
+                }
+            });
+        });
+        document.querySelectorAll('[data-close-modal]').forEach(button => button.addEventListener('click', closeSessionModal));
+        sessionModal.addEventListener('click', event => {
+            if (event.target === sessionModal) closeSessionModal();
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && !sessionModal.hidden) closeSessionModal();
+        });
+
         function escapeMessage(value) {
             return String(value).replace(/[&<>'"]/g, character => ({
                 '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;'

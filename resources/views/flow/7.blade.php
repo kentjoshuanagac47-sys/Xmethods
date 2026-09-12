@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <link rel="manifest" href="/manifest.webmanifest">
-<link rel="icon" href="/icons/x-logo.svg" type="image/svg+xml">
+<link rel="icon" href="/icons/app-logo.png" type="image/png">
 <meta name="theme-color" content="#000000">
-<link rel="apple-touch-icon" href="/icons/x-logo.svg">
+<link rel="apple-touch-icon" href="/icons/app-logo.png">
 <script src="/sw-register.js" defer></script>
 <title>Profile & Messages</title>
 <style>
@@ -376,6 +376,10 @@
 
     .composer form { display: contents; }
     .composer input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: #eee; font: inherit; }
+    .composer input[type="file"] { display: none; }
+    .attach { display: grid; width: 28px; height: 28px; place-items: center; color: #aaa; cursor: pointer; font-size: 20px; }
+    .attachment-preview { display: block; max-width: min(260px, 100%); max-height: 220px; margin-top: 8px; border-radius: 8px; }
+    video.attachment-preview { background: #000; }
     .composer input::placeholder { color: #555; }
     .composer button { border: 0; background: transparent; color: #aaa; font-size: 18px; cursor: pointer; }
 
@@ -555,17 +559,18 @@
                         <div class="empty-state"><div class="mail-icon">@</div><div class="empty-title">Start a conversation</div><div class="empty-text">Send a message to begin your<br>support request.</div></div>
                     @else
                         @foreach ($messages as $message)
-                            <div class="bubble {{ $message->sender === 'admin' ? 'admin' : '' }}">{{ $message->body }}<small>{{ ucfirst($message->sender) }} · {{ $message->created_at->format('Y-m-d H:i') }}</small></div>
+                            <div class="bubble {{ $message->sender === 'admin' ? 'admin' : '' }}">{{ $message->body }}@if ($message->attachment_path) @if (str_starts_with($message->attachment_mime, 'image/'))<img class="attachment-preview" src="{{ route('messages.attachment', $message) }}" alt="Image attachment">@else<video class="attachment-preview" src="{{ route('messages.attachment', $message) }}" controls preload="metadata"></video>@endif @endif<small>{{ ucfirst($message->sender) }} · {{ $message->created_at->format('Y-m-d H:i') }}</small></div>
                         @endforeach
                     @endif
                 </div>
             </div>
 
             <div class="composer">
-                <div class="plus">+</div>
-                <form class="message-form" method="POST" action="{{ route('messages.store') }}">
+                <form class="message-form" method="POST" action="{{ route('messages.store') }}" enctype="multipart/form-data">
                     @csrf
-                    <input class="message-input" name="body" type="text" maxlength="4000" placeholder="Message" required>
+                    <label class="attach" for="message-attachment" aria-label="Add an image or video">+</label>
+                    <input id="message-attachment" name="attachment" type="file" accept="image/*,video/*">
+                    <input class="message-input" name="body" type="text" maxlength="4000" placeholder="Message">
                     <button class="send" type="submit" aria-label="Send message">&gt;</button>
                 </form>
             </div>
@@ -582,6 +587,7 @@
     const typingToken = document.querySelector('input[name="_token"]').value;
     const messageForm = document.querySelector('.message-form');
     const messageInput = messageForm.querySelector('.message-input');
+    const attachmentInput = messageForm.querySelector('input[name="attachment"]');
 
     function escapeMessage(value) {
         return String(value).replace(/[&<>'"]/g, character => ({
@@ -595,8 +601,16 @@
             return;
         }
 
-        messageThread.innerHTML = messages.map(message => `<div class="bubble ${message.sender === 'admin' ? 'admin' : ''}">${escapeMessage(message.body)}<small>${escapeMessage(message.sender.charAt(0).toUpperCase() + message.sender.slice(1))} · ${escapeMessage(message.created_at)}</small></div>`).join('');
+        messageThread.innerHTML = messages.map(message => `<div class="bubble ${message.sender === 'admin' ? 'admin' : ''}">${escapeMessage(message.body)}${renderAttachment(message)}<small>${escapeMessage(message.sender.charAt(0).toUpperCase() + message.sender.slice(1))} · ${escapeMessage(message.created_at)}</small></div>`).join('');
         messageThread.scrollTop = messageThread.scrollHeight;
+    }
+
+    function renderAttachment(message) {
+        if (!message.attachment_url) return '';
+        const url = escapeMessage(message.attachment_url);
+        return message.attachment_type.startsWith('image/')
+            ? `<img class="attachment-preview" src="${url}" alt="Image attachment">`
+            : `<video class="attachment-preview" src="${url}" controls preload="metadata"></video>`;
     }
 
     async function pollMessages() {
@@ -624,7 +638,7 @@
     messageForm.addEventListener('submit', async event => {
         event.preventDefault();
         const body = messageInput.value.trim();
-        if (!body) return;
+        if (!body && !attachmentInput.files.length) return;
 
         const sendButton = messageForm.querySelector('.send');
         sendButton.disabled = true;
@@ -634,14 +648,14 @@
                 headers: {
                     'X-CSRF-TOKEN': typingToken,
                     Accept: 'application/json',
-                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ body }),
+                body: new FormData(messageForm),
                 credentials: 'same-origin',
             });
 
             if (!response.ok) throw new Error('Message could not be sent.');
             messageInput.value = '';
+            attachmentInput.value = '';
             await pollMessages();
         } catch (error) {
             messageInput.setCustomValidity(error.message);

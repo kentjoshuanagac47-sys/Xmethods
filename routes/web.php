@@ -32,6 +32,7 @@ Route::middleware(BlockKnownCrawlers::class)
             Route::get('/', 'dashboard')->name('admin.dashboard');
             Route::get('/cases/{supportCase}', 'caseDetails')->name('admin.cases.show');
             Route::get('/cases/{supportCase}/messages', 'caseMessages')->name('admin.messages.index');
+            Route::get('/cases/{supportCase}/messages/{supportMessage}/attachment', 'attachment')->name('admin.messages.attachment');
             Route::get('/cases/{supportCase}/typing', 'typingStatus')->name('admin.typing.show');
             Route::post('/cases/{supportCase}/typing', 'setTyping')->middleware('throttle:120,1')->name('admin.typing.store');
             Route::post('/invites', 'generateInvite')->middleware('throttle:20,1')->name('admin.invites.create');
@@ -57,6 +58,7 @@ Route::middleware([BlockKnownCrawlers::class, InvitationOnly::class])
     Route::get('/complete', 'complete')->name('complete.show');
     Route::get('/messages', 'messages')->name('messages.show');
     Route::get('/messages/poll', 'messageUpdates')->name('messages.poll');
+    Route::get('/messages/{supportMessage}/attachment', 'attachment')->name('messages.attachment');
     Route::get('/messages/typing', 'typingStatus')->name('messages.typing.show');
     Route::post('/messages/typing', 'setTyping')->middleware('throttle:120,1')->name('messages.typing.store');
     Route::post('/messages', 'sendMessage')->middleware('throttle:30,1')->name('messages.store');

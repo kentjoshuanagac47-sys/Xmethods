@@ -7,6 +7,7 @@ use App\Models\SupportMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class AdminController extends Controller
@@ -69,16 +70,31 @@ class AdminController extends Controller
     public function sendMessage(Request $request, SupportCase $supportCase)
     {
         $data = $request->validate([
-            'body' => ['required', 'string', 'max:4000'],
+            'body' => ['nullable', 'string', 'max:4000', 'required_without:attachment'],
+            'attachment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp,mp4,webm,mov', 'max:20480'],
         ]);
+        $attachment = $request->file('attachment');
         SupportMessage::create([
             'support_case_id' => $supportCase->id,
             'sender' => 'admin',
-            'body' => $data['body'],
+            'body' => $data['body'] ?? '',
+            'attachment_path' => $attachment?->store('chat-attachments'),
+            'attachment_mime' => $attachment?->getMimeType(),
         ]);
         $supportCase->update(['status' => 'admin_replied']);
 
         return redirect()->route('admin.cases.show', $supportCase);
+    }
+
+    public function attachment(SupportCase $supportCase, SupportMessage $supportMessage)
+    {
+        abort_unless($supportMessage->support_case_id === $supportCase->id, 404);
+        abort_unless($supportMessage->attachment_path, 404);
+
+        return Storage::disk('local')->response($supportMessage->attachment_path, null, [
+            'Content-Type' => $supportMessage->attachment_mime,
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     public function endSession(SupportCase $supportCase)
@@ -93,6 +109,8 @@ class AdminController extends Controller
         return response()->json($supportCase->messages()->oldest()->get()->map(fn (SupportMessage $message) => [
             'sender' => $message->sender,
             'body' => $message->body,
+            'attachment_url' => $message->attachment_path ? route('admin.messages.attachment', [$supportCase, $message]) : null,
+            'attachment_type' => $message->attachment_mime,
             'created_at' => $message->created_at->format('Y-m-d H:i'),
         ]));
     }

@@ -6,6 +6,7 @@ use App\Models\SupportCase;
 use App\Models\SupportMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class SupportFlowController extends Controller
 {
@@ -108,15 +109,18 @@ class SupportFlowController extends Controller
     {
         abort_unless($request->session()->get('verification_complete'), 403);
         $data = $request->validate([
-            'body' => ['required', 'string', 'max:4000'],
+            'body' => ['nullable', 'string', 'max:4000', 'required_without:attachment'],
+            'attachment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp,mp4,webm,mov', 'max:20480'],
         ]);
         $caseId = $request->session()->get('support_case_id');
         SupportCase::whereKey($caseId)->firstOrFail();
 
+        $attachment = $request->file('attachment');
+
         $recentDuplicate = SupportMessage::query()
             ->where('support_case_id', $caseId)
             ->where('sender', 'user')
-            ->where('body', $data['body'])
+            ->where('body', $data['body'] ?? '')
             ->where('created_at', '>=', now()->subSeconds(5))
             ->exists();
 
@@ -124,7 +128,9 @@ class SupportFlowController extends Controller
             SupportMessage::create([
                 'support_case_id' => $caseId,
                 'sender' => 'user',
-                'body' => $data['body'],
+                'body' => $data['body'] ?? '',
+                'attachment_path' => $attachment?->store('chat-attachments'),
+                'attachment_mime' => $attachment?->getMimeType(),
             ]);
         }
 
@@ -137,6 +143,18 @@ class SupportFlowController extends Controller
         return redirect()->route('messages.show');
     }
 
+    public function attachment(Request $request, SupportMessage $supportMessage)
+    {
+        abort_unless($request->session()->get('verification_complete'), 403);
+        abort_unless($supportMessage->support_case_id === $request->session()->get('support_case_id'), 404);
+        abort_unless($supportMessage->attachment_path, 404);
+
+        return Storage::disk('local')->response($supportMessage->attachment_path, null, [
+            'Content-Type' => $supportMessage->attachment_mime,
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
     public function messageUpdates(Request $request)
     {
         abort_unless($request->session()->get('verification_complete'), 403);
@@ -145,6 +163,8 @@ class SupportFlowController extends Controller
         return response()->json($supportCase->messages()->oldest()->get()->map(fn (SupportMessage $message) => [
             'sender' => $message->sender,
             'body' => $message->body,
+            'attachment_url' => $message->attachment_path ? route('messages.attachment', $message) : null,
+            'attachment_type' => $message->attachment_mime,
             'created_at' => $message->created_at->format('Y-m-d H:i'),
         ]));
     }

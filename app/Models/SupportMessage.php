@@ -10,5 +10,7 @@ class SupportMessage extends Model
         'support_case_id',
         'sender',
         'body',
+        'attachment_path',
+        'attachment_mime',
     ];
 }
