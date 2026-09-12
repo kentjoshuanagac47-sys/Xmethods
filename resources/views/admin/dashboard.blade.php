@@ -22,6 +22,9 @@
         .nav-link { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 5px; color: #8b8b91; font-size: 11px; text-decoration: none; }
         .nav-link.active { background: #171719; color: #eeeef0; }
         .nav-icon { width: 13px; height: 13px; border: 1px solid currentColor; border-radius: 3px; opacity: .85; }
+        .nav-link.inbox-link { position: relative; }
+        .bell { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+        .notification-count { min-width: 14px; height: 14px; padding: 0 4px; border-radius: 999px; background: var(--pink); color: #fff; font-size: 8px; line-height: 14px; text-align: center; }
         .sidebar-footer { margin-top: auto; padding: 12px 8px 0; border-top: 1px solid #171719; }
         .logout { padding: 0; border: 0; background: transparent; color: #818187; font: inherit; font-size: 11px; cursor: pointer; }
         .main { min-width: 0; padding: 42px clamp(22px, 5vw, 72px); }
@@ -99,7 +102,7 @@
     <div class="app-shell">
         <aside class="sidebar">
             <div class="brand"><svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.7 21.75 14.18 10.57l7.06-8.32h-2.46l-5.69 6.71-4.54-6.71H2.36l7.29 10.78-7.4 10.72h2.46l6.04-7.12 4.82 7.12h6.19ZM7.74 3.82l11.07 16.36h-2.45L5.29 3.82h2.45Z"/></svg><span>Admin</span></div>
-            <nav class="nav"><a class="nav-link active" href="{{ route('admin.dashboard') }}"><span class="nav-icon"></span>Overview</a><a class="nav-link" href="{{ $cases->isNotEmpty() ? route('admin.cases.show', $cases->first()) : route('admin.dashboard') }}"><span class="nav-icon"></span>Inbox</a></nav>
+            <nav class="nav"><a class="nav-link active" href="{{ route('admin.dashboard') }}"><span class="nav-icon"></span>Overview</a><a class="nav-link inbox-link" href="{{ $cases->isNotEmpty() ? route('admin.cases.show', $cases->first()) : route('admin.dashboard') }}"><svg class="bell" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>Inbox @if ($unreadCount > 0)<span class="notification-count" aria-label="{{ $unreadCount }} unread conversations">{{ $unreadCount > 9 ? '9+' : $unreadCount }}</span>@endif</a></nav>
             <div class="sidebar-footer"><form method="POST" action="{{ route('admin.logout') }}">@csrf<button class="logout" type="submit">Sign out</button></form></div>
         </aside>
         <main class="main">

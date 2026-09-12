@@ -210,12 +210,7 @@
     width: 42px;
     height: 42px;
     border-radius: 50%;
-    background: linear-gradient(145deg,#e7e7e7,#6d6d6d);
-    display: grid;
-    place-items: center;
-    color: #222;
-    font-size: 16px;
-    font-weight: bold;
+    object-fit: cover;
     flex-shrink: 0;
   }
 
@@ -242,6 +237,9 @@
   }
 
   .continue{
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
     height: 48px;
     border: 1px solid #ddd;
@@ -251,6 +249,7 @@
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
+    text-decoration: none;
     transition: 0.2s;
   }
 
@@ -356,9 +355,9 @@
       </p>
 
       <div class="profile">
-        <div class="avatar">M</div>
+        <img class="avatar" src="https://media.licdn.com/dms/image/v2/D4D03AQGt2qMWzmts7g/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1706214642287?e=2147483647&amp;v=beta&amp;t=50UjwQxzaY6b31PQJTl7_8gnuFO0Dg3oy-kTQS4B8i4" alt="Mahdi Nawaz profile">
         <div class="profile-copy">
-          <p class="name">Matt Hens</p>
+          <p class="name">Mahdi Nawaz</p>
           <p class="message">
             Your case has been assigned. Proceed to discuss your account issue.
           </p>

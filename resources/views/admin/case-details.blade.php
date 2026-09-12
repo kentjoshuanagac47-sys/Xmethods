@@ -22,6 +22,9 @@
         .nav-link { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 5px; color: #8b8b91; font-size: 11px; text-decoration: none; }
         .nav-link.active { background: #171719; color: #eeeef0; }
         .nav-icon { width: 13px; height: 13px; border: 1px solid currentColor; border-radius: 3px; opacity: .85; }
+        .nav-link.inbox-link { position: relative; }
+        .bell { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+        .notification-count { min-width: 14px; height: 14px; padding: 0 4px; border-radius: 999px; background: var(--pink); color: #fff; font-size: 8px; line-height: 14px; text-align: center; }
         .sidebar-footer { margin-top: auto; padding: 12px 8px 0; border-top: 1px solid #171719; }
         .logout { padding: 0; border: 0; background: transparent; color: #818187; font: inherit; font-size: 11px; cursor: pointer; }
         .main { min-width: 0; padding: 38px 22px 22px; }
@@ -44,7 +47,7 @@
         .bubble { align-self: flex-start; max-width: 72%; padding: 10px 12px; border-radius: 9px 9px 9px 2px; background: #1a1a1c; color: #d8d8dc; font-size: 11px; line-height: 1.45; overflow-wrap: anywhere; }
         .bubble.admin { align-self: flex-end; border-radius: 9px 9px 2px 9px; background: #183520; }
         .bubble small { display: block; margin-top: 5px; color: #77777d; font-size: 9px; }
-        .typing-indicator { display: none; align-items: center; justify-content: center; gap: 3px; width: 42px; height: 24px; margin: 0 12px 6px; border-radius: 999px; background: #2b2b2d; }
+        .typing-indicator { display: none; align-self: flex-start; flex: 0 0 auto; align-items: center; justify-content: center; gap: 3px; width: 42px; height: 24px; margin: 0; border-radius: 999px; background: #2b2b2d; }
         .typing-indicator.is-visible { display: flex; }
         .typing-indicator span { width: 4px; height: 4px; border-radius: 50%; background: #aaa; animation: typing-dot 1.2s infinite ease-in-out; }
         .typing-indicator span:nth-child(2) { animation-delay: .15s; }
@@ -54,6 +57,10 @@
         .reply input { flex: 1; min-width: 0; height: 38px; padding: 0; border: 0; outline: 0; background: transparent; color: #fff; font-size: 12px; }
         .reply input[type="file"] { display: none; }
         .attach { display: grid; width: 22px; height: 22px; place-items: center; color: #aaa; cursor: pointer; font-size: 17px; }
+        .attachment-selection { display: none; align-items: center; gap: 8px; margin: 0 12px 6px; color: #aaa; font-size: 10px; }
+        .attachment-selection.is-visible { display: flex; }
+        .attachment-selection img, .attachment-selection video { width: 38px; height: 38px; object-fit: cover; border-radius: 6px; background: #000; }
+        .attachment-selection span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .reply button { height: 28px; padding: 0 11px; border: 0; border-radius: 5px; background: #e9e9eb; color: #111; font-size: 10px; font-weight: 700; }
         .attachment-preview { display: block; max-width: min(260px, 100%); max-height: 220px; margin-top: 8px; border-radius: 8px; }
         video.attachment-preview { background: #000; }
@@ -81,7 +88,7 @@
     <div class="app-shell">
         <aside class="sidebar">
             <div class="brand"><svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.7 21.75 14.18 10.57l7.06-8.32h-2.46l-5.69 6.71-4.54-6.71H2.36l7.29 10.78-7.4 10.72h2.46l6.04-7.12 4.82 7.12h6.19ZM7.74 3.82l11.07 16.36h-2.45L5.29 3.82h2.45Z"/></svg><span>Admin</span></div>
-            <nav class="nav"><a class="nav-link" href="{{ route('admin.dashboard') }}"><span class="nav-icon"></span>Overview</a><a class="nav-link active" href="{{ route('admin.cases.show', $supportCase) }}"><span class="nav-icon"></span>Inbox</a></nav>
+            <nav class="nav"><a class="nav-link" href="{{ route('admin.dashboard') }}"><span class="nav-icon"></span>Overview</a><a class="nav-link active inbox-link" href="{{ route('admin.cases.show', $supportCase) }}"><svg class="bell" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>Inbox @if ($unreadCount > 0)<span class="notification-count" aria-label="{{ $unreadCount }} unread conversations">{{ $unreadCount > 9 ? '9+' : $unreadCount }}</span>@endif</a></nav>
             <div class="sidebar-footer"><form method="POST" action="{{ route('admin.logout') }}">@csrf<button class="logout" type="submit">Sign out</button></form></div>
         </aside>
         <main class="main">
@@ -98,9 +105,10 @@
                 @empty
                     <p class="empty">No messages yet.</p>
                 @endforelse
+                    <div class="typing-indicator" data-typing-indicator aria-live="polite"></div>
                     </div>
                     <div>
-                        <div class="typing-indicator" data-typing-indicator aria-live="polite"></div>
+                        <div class="attachment-selection" data-attachment-selection aria-live="polite"></div>
                         <form class="reply" method="POST" action="{{ route('admin.messages.store', $supportCase) }}" enctype="multipart/form-data">
                 @csrf
                     <label class="attach" for="admin-attachment" aria-label="Add an image or video">+</label>
@@ -128,6 +136,34 @@
         const typingStatusUrl = @json(route('admin.typing.show', $supportCase));
         const typingStoreUrl = @json(route('admin.typing.store', $supportCase));
         const typingToken = document.querySelector('input[name="_token"]').value;
+        const attachmentInput = document.querySelector('#admin-attachment');
+        const attachmentSelection = document.querySelector('[data-attachment-selection]');
+        let attachmentPreviewUrl = null;
+
+        function clearAttachmentPreview() {
+            if (attachmentPreviewUrl) URL.revokeObjectURL(attachmentPreviewUrl);
+            attachmentPreviewUrl = null;
+            attachmentSelection.innerHTML = '';
+            attachmentSelection.classList.remove('is-visible');
+        }
+
+        attachmentInput.addEventListener('change', () => {
+            clearAttachmentPreview();
+            const file = attachmentInput.files[0];
+            if (!file) return;
+            attachmentPreviewUrl = URL.createObjectURL(file);
+            const preview = document.createElement(file.type.startsWith('video/') ? 'video' : 'img');
+            preview.src = attachmentPreviewUrl;
+            if (preview.tagName === 'VIDEO') {
+                preview.muted = true;
+                preview.autoplay = true;
+                preview.loop = true;
+            }
+            const label = document.createElement('span');
+            label.textContent = file.name;
+            attachmentSelection.append(preview, label);
+            attachmentSelection.classList.add('is-visible');
+        });
 
         function escapeMessage(value) {
             return String(value).replace(/[&<>'"]/g, character => ({

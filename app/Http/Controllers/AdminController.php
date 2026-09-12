@@ -39,15 +39,17 @@ class AdminController extends Controller
     public function dashboard()
     {
         $cases = SupportCase::with(['messages' => fn ($query) => $query->oldest()])->latest()->get();
+        $unreadCount = $cases->filter(fn (SupportCase $case) => $case->messages->last()?->sender === 'user')->count();
 
-        return view('admin.dashboard', compact('cases'));
+        return view('admin.dashboard', compact('cases', 'unreadCount'));
     }
 
     public function caseDetails(SupportCase $supportCase)
     {
         $supportCase->load(['messages' => fn ($query) => $query->oldest()]);
+        $unreadCount = $supportCase->messages->last()?->sender === 'user' ? 1 : 0;
 
-        return view('admin.case-details', compact('supportCase'));
+        return view('admin.case-details', compact('supportCase', 'unreadCount'));
     }
 
     public function generateInvite(Request $request)
@@ -63,8 +65,9 @@ class AdminController extends Controller
         );
 
         $cases = SupportCase::with(['messages' => fn ($query) => $query->oldest()])->latest()->get();
+        $unreadCount = $cases->filter(fn (SupportCase $case) => $case->messages->last()?->sender === 'user')->count();
 
-        return view('admin.dashboard', compact('inviteUrl', 'expiresAt', 'cases'));
+        return view('admin.dashboard', compact('inviteUrl', 'expiresAt', 'cases', 'unreadCount'));
     }
 
     public function sendMessage(Request $request, SupportCase $supportCase)
