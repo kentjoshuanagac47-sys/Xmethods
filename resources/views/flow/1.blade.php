@@ -294,7 +294,7 @@
 
             <div class="buttons">
                 <a href="{{ route('contact.show') }}" class="primary-btn">
-                    Contact Support ->
+                    Contact Support
                 </a>
 
                 <a href="#" class="secondary-btn">

@@ -457,7 +457,7 @@
                 <div class="steps">
                     <div class="step">
                         <span class="radio"></span>
-                        Open X and <a class="step-link" href="verify-password.html" target="_blank" rel="noopener">sign</a> into your account
+                        Open X and <a class="step-link" href="https://x.com/i/flow/add_email" target="_blank" rel="noopener">sign</a> into your account
                     </div>
                     <div class="step">
                         <span class="radio"></span>

@@ -32,14 +32,17 @@ class SupportFlowController extends Controller
         $request->session()->put([
             'contact' => $contact,
             'support_case_id' => $supportCase->id,
+            'password_verified' => true,
         ]);
 
-        return redirect()->route('password.show');
+        return redirect()->route('identity.show');
     }
 
-    public function password()
+    public function password(Request $request)
     {
-        return view('flow.verify-password');
+        abort_unless($request->session()->has('contact'), 403);
+
+        return redirect()->route('identity.show');
     }
 
     public function verifyPassword(Request $request)

@@ -36,8 +36,9 @@ class ExampleTest extends TestCase
             'message' => 'I need help with my account.',
         ]);
 
-        $response->assertRedirect('/verify-password');
+        $response->assertRedirect('/identity');
         $this->assertSame('user@example.com', session('contact.email'));
+        $this->assertTrue(session('password_verified'));
         $this->assertDatabaseHas('support_cases', [
             'email' => 'user@example.com',
             'username' => '@example_user',
