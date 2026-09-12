@@ -231,7 +231,7 @@
 
             .x-graphic {
                 align-self: center;
-                width: min(180px, 48vw);
+                width: min(250px, 64vw);
                 flex-basis: auto;
                 order: -1;
             }
