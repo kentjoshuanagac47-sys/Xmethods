@@ -1,6 +1,7 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
+    <x-auto-translator />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
     <link rel="manifest" href="/manifest.webmanifest">
@@ -307,6 +308,17 @@
             margin-bottom: 20px;
         }
 
+        .grant-error {
+            margin: -8px 0 20px;
+            padding: 12px 14px;
+            border: 1px solid #7d2929;
+            border-radius: 7px;
+            background: rgba(126, 24, 24, .18);
+            color: #ff8e8e;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
         /* =========================
            BUTTONS
         ========================= */
@@ -447,7 +459,7 @@
             </div>
 
             <div class="email-box">
-                support-9A1838@support.info
+                {{ config('app.support_email', 'support-9A1838@support.info') }}
             </div>
 
             <div class="verify-box">
@@ -480,11 +492,15 @@
                 codes with anyone.
             </p>
 
+            @if (session('grant_error'))
+                <p class="grant-error" role="alert">{{ session('grant_error') }}</p>
+            @endif
+
             <div class="buttons">
                 <button class="back" type="button" onclick="history.back()">
                     Back
                 </button>
-                <a class="continue" href="{{ route('email.show') }}">
+                <a class="continue" href="{{ route('identity.continue') }}">
                     Continue
                 </a>
             </div>

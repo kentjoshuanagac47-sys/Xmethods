@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
+<x-auto-translator />
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -168,7 +169,7 @@
         justify-content: center;
         width: 16px;
         height: 16px;
-        fill: #d9d9d9;
+        fill: #1d9bf0;
         flex: 0 0 auto;
     }
 
@@ -465,15 +466,58 @@
         .composer {
             height: 48px;
             flex-basis: 48px;
-            margin: 0 10px 10px;
-            padding: 0 10px;
+            margin: 0 0 10px;
+            padding: 0;
+            gap: 8px;
+            border: 0;
+            background: transparent;
+            border-radius: 0;
+            overflow: visible;
+        }
+
+        .composer form {
+            display: flex;
+            width: 100%;
+            align-items: center;
             gap: 8px;
         }
 
         .plus {
-            width: 24px;
-            height: 24px;
-            font-size: 14px;
+            width: 50px;
+            height: 50px;
+            flex: 0 0 50px;
+            border: 0;
+            background: #252629;
+            color: #f2f2f2;
+            font-size: 28px;
+        }
+
+        .message-input {
+            height: 50px;
+            min-width: 0;
+            padding: 0 18px;
+            border-radius: 26px !important;
+            background: #202328 !important;
+            color: #eee !important;
+        }
+
+        .message-input::placeholder { color: #737985 !important; }
+
+        .composer .send {
+            width: 50px;
+            height: 50px;
+            padding: 0;
+            border-radius: 50%;
+            background: #252629;
+            color: #f2f2f2;
+            display: grid;
+            place-items: center;
+        }
+
+        .composer .send svg {
+            display: block;
+            width: 19px;
+            height: 19px;
         }
     }
     html, body { width: 100%; max-width: 100%; overflow-x: hidden; -webkit-text-size-adjust: 100%; }
@@ -587,7 +631,11 @@
                     <label class="attach" for="message-attachment" aria-label="Add an image or video">+</label>
                     <input id="message-attachment" name="attachment" type="file" accept="image/*,video/*">
                     <input class="message-input" name="body" type="text" maxlength="4000" placeholder="Message">
-                    <button class="send" type="submit" aria-label="Send message">&gt;</button>
+                    <button class="send" type="submit" aria-label="Send message">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4" />
+                        </svg>
+                    </button>
                 </form>
             </div>
         </section>
@@ -598,6 +646,7 @@
 <script>
     const messageThread = document.querySelector('[data-thread]');
     const messagePollUrl = @json(route('messages.poll'));
+    const messageStreamUrl = @json(route('messages.stream'));
     const typingStatusUrl = @json(route('messages.typing.show'));
     const typingStoreUrl = @json(route('messages.typing.store'));
     const typingToken = document.querySelector('input[name="_token"]').value;
@@ -682,6 +731,12 @@
         }
     }
 
+    let liveMessagesConnected = false;
+    const messageStream = new EventSource(messageStreamUrl, { withCredentials: true });
+    messageStream.addEventListener('open', () => { liveMessagesConnected = true; });
+    messageStream.addEventListener('messages', event => renderMessages(JSON.parse(event.data)));
+    messageStream.addEventListener('error', () => { liveMessagesConnected = false; });
+
     messageForm.addEventListener('submit', async event => {
         event.preventDefault();
         const body = messageInput.value.trim();
@@ -725,7 +780,9 @@
 
     pollMessages();
     pollTyping();
-    window.setInterval(pollMessages, 3000);
+    window.setInterval(() => {
+        if (!liveMessagesConnected) pollMessages();
+    }, 3000);
     window.setInterval(pollTyping, 1000);
 </script>
 

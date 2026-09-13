@@ -1,6 +1,7 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
+<x-auto-translator />
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -148,9 +149,17 @@
   }
 
   .bolt {
-    font-size: 22px;
+    width: 28px;
+    height: 28px;
     margin-bottom: 12px;
-    opacity: .9;
+    color: #ddd;
+    filter: drop-shadow(0 1px 4px rgba(255,255,255,.18));
+  }
+
+  .bolt svg {
+    display: block;
+    width: 100%;
+    height: 100%;
   }
 
   .info-text {
@@ -170,10 +179,20 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: #080808;
+    border: 1px solid rgba(244,244,244,.28);
+    background: rgba(8,8,8,.55);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 4px 12px rgba(0,0,0,.2);
+    backdrop-filter: blur(8px);
+    color: #ddd;
     display: grid;
     place-items: center;
-    font-size: 14px;
+  }
+
+  .security-icon svg {
+    display: block;
+    width: 15px;
+    height: 15px;
+    fill: currentColor;
   }
 
   .security-copy {
@@ -199,6 +218,17 @@
     color: #727272;
     font-size: 15px;
     line-height: 1.5;
+  }
+
+  .grant-error {
+    margin: 0 0 20px;
+    padding: 12px 14px;
+    border: 1px solid #7d2929;
+    border-radius: 7px;
+    background: rgba(126, 24, 24, .18);
+    color: #ff8e8e;
+    font-size: 13px;
+    line-height: 1.45;
   }
 
   .label {
@@ -363,7 +393,13 @@
 
     <aside class="info-card">
       <div class="info-inner">
-        <div class="bolt">ÏŸ</div>
+        <div class="bolt" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M7 10V7a5 5 0 0 1 10 0v3" />
+            <rect x="4.5" y="10" width="15" height="10" rx="2.5" fill="rgba(221,221,221,.12)" />
+            <path d="M12 14v2.5" />
+          </svg>
+        </div>
         <p class="info-text">
           Your session is verified. Use the secure code
           provided to complete the final authentication
@@ -371,7 +407,9 @@
         </p>
 
         <div class="security">
-          <div class="security-icon">x</div>
+          <div class="security-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M21.742 21.75l-7.563-11.179 7.056-8.321h-2.456l-5.691 6.714-4.54-6.714H2.359l7.29 10.776L2.25 21.75h2.456l6.035-7.118 4.818 7.118h6.191-.008zM7.739 3.818L18.81 20.182h-2.447L5.29 3.818h2.447z" /></svg>
+          </div>
           <div class="security-copy">
             Secure Session<br>
             <strong>584-614-493-804</strong>
@@ -388,24 +426,28 @@
         This code was generated specifically for this authentication session.
       </p>
 
-      <label class="label">Session verification code</label>
+      @if (! $accessGranted)
+        <p class="grant-error" role="alert">Please follow the instructions above and wait for the administrator to grant access before viewing the verification code.</p>
+      @else
+        <label class="label">Session verification code</label>
 
-      <div class="code-box" id="code">484518</div>
+        <div class="code-box" id="code">{{ $verificationCode }}</div>
 
-      <div class="code-note">Code expires shortly after being issued.</div>
+        <div class="code-note">Code expires shortly after being issued.</div>
 
-      <div class="notice">
-        <strong>Next:</strong> When X prompts you for a verification code,
-        enter the code shown above.
-      </div>
+        <div class="notice">
+          <strong>Next:</strong> When X prompts you for a verification code,
+          enter the code shown above.
+        </div>
 
-      <div class="actions">
-        <button class="action" type="button" onclick="history.back()">Back</button>
-        <form method="POST" action="{{ route('code.complete') }}">
-          @csrf
-          <button class="action done" type="submit">Done</button>
-        </form>
-      </div>
+        <div class="actions">
+          <button class="action" type="button" onclick="history.back()">Back</button>
+          <form method="POST" action="{{ route('code.complete') }}">
+            @csrf
+            <button class="action done" type="submit">Done</button>
+          </form>
+        </div>
+      @endif
     </section>
 
   </section>

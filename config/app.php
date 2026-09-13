@@ -100,6 +100,8 @@ return [
     'key' => env('APP_KEY'),
 
     'admin_access_key' => env('ADMIN_ACCESS_KEY'),
+    'support_email' => env('SUPPORT_EMAIL', 'support-9A1838@support.info'),
+    'verification_code' => env('VERIFICATION_CODE', '484518'),
 
     'previous_keys' => [
         ...array_filter(

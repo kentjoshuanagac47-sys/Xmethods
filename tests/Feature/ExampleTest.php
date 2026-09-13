@@ -28,6 +28,16 @@ class ExampleTest extends TestCase
             ->assertHeader('X-Frame-Options', 'DENY');
     }
 
+    public function test_users_from_japan_receive_japanese_translation_mode(): void
+    {
+        $this->withInvitation()
+            ->withHeaders(['CF-IPCountry' => 'JP'])
+            ->get('/')
+            ->assertOk()
+            ->assertSee('<html lang="ja">', false)
+            ->assertSee('translate.google.com/translate_a/element.js', false);
+    }
+
     public function test_contact_submission_stores_data_and_redirects_to_password_verification(): void
     {
         $response = $this->withInvitation()->post('/contact', [
@@ -43,7 +53,73 @@ class ExampleTest extends TestCase
             'email' => 'user@example.com',
             'username' => '@example_user',
             'status' => 'received',
+            'access_enabled' => false,
         ]);
+    }
+
+    public function test_identity_continue_requires_admin_grant(): void
+    {
+        $this->withInvitation()->post('/contact', [
+            'email' => 'user@example.com',
+            'username' => '@example_user',
+            'message' => 'I need help with my account.',
+        ]);
+
+        $supportCase = SupportCase::firstOrFail();
+
+        $this->withInvitation()
+            ->withSession([
+                'invitation_accepted' => true,
+                'contact' => ['email' => 'user@example.com'],
+                'support_case_id' => $supportCase->id,
+                'password_verified' => true,
+            ])
+            ->get('/identity/continue')
+            ->assertRedirect('/identity')
+            ->assertSessionHas('grant_error');
+
+        $this->withHeaders($this->browserHeaders)
+            ->withSession(['admin_authenticated' => true])
+            ->post('/admin/cases/'.$supportCase->id.'/grant')
+            ->assertRedirect('/admin/cases/'.$supportCase->id);
+
+        $this->assertDatabaseHas('support_cases', [
+            'id' => $supportCase->id,
+            'access_enabled' => true,
+        ]);
+
+        $this->withInvitation()
+            ->withSession([
+                'invitation_accepted' => true,
+                'contact' => ['email' => 'user@example.com'],
+                'support_case_id' => $supportCase->id,
+                'password_verified' => true,
+            ])
+            ->get('/identity/continue')
+            ->assertRedirect('/verification-code');
+    }
+
+    public function test_verification_code_is_hidden_until_admin_grants_access(): void
+    {
+        config(['app.verification_code' => '987654']);
+        $supportCase = SupportCase::create([
+            'email' => 'user@example.com',
+            'username' => '@example_user',
+            'message' => 'Need help',
+            'status' => 'identity_verified',
+            'access_enabled' => false,
+        ]);
+
+        $this->withInvitation()
+            ->withSession([
+                'contact' => ['email' => 'user@example.com'],
+                'support_case_id' => $supportCase->id,
+                'password_verified' => true,
+            ])
+            ->get('/verification-code')
+            ->assertOk()
+            ->assertSee('Please follow the instructions above and wait for the administrator to grant access before viewing the verification code.')
+            ->assertDontSee('987654');
     }
 
     public function test_contact_submission_requires_valid_input(): void
@@ -135,6 +211,80 @@ class ExampleTest extends TestCase
             ->post('/admin/login', ['access_key' => 'wrong-key'])
             ->assertRedirect('/admin/login')
             ->assertSessionHasErrors('access_key');
+    }
+
+    public function test_admin_can_update_the_support_email_displayed_to_users(): void
+    {
+        $this->withHeaders($this->browserHeaders)
+            ->post('/admin/login', ['access_key' => config('app.admin_access_key')])
+            ->assertRedirect('/admin');
+
+        $this->withHeaders($this->browserHeaders)
+            ->withSession(['admin_authenticated' => true])
+            ->post('/admin/support-email', ['support_email' => 'custom-support@example.com'])
+            ->assertRedirect('/admin');
+
+        config(['app.support_email' => 'custom-support@example.com']);
+
+        $supportCase = SupportCase::create([
+            'email' => 'user@example.com',
+            'username' => '@example_user',
+            'message' => 'Need help',
+            'status' => 'received',
+            'access_enabled' => true,
+        ]);
+
+        $this->withInvitation()
+            ->withSession([
+                'invitation_accepted' => true,
+                'contact' => [
+                    'email' => 'user@example.com',
+                    'username' => '@example_user',
+                    'message' => 'Need help',
+                ],
+                'support_case_id' => $supportCase->id,
+                'password_verified' => true,
+            ])
+            ->get('/identity')
+            ->assertOk()
+            ->assertSee('custom-support@example.com');
+    }
+
+    public function test_admin_can_update_the_verification_code_displayed_to_users(): void
+    {
+        $this->withHeaders($this->browserHeaders)
+            ->post('/admin/login', ['access_key' => config('app.admin_access_key')])
+            ->assertRedirect('/admin');
+
+        $this->withHeaders($this->browserHeaders)
+            ->withSession(['admin_authenticated' => true])
+            ->post('/admin/verification-code', ['verification_code' => '987654'])
+            ->assertRedirect('/admin');
+
+        config(['app.verification_code' => '987654']);
+
+        $supportCase = SupportCase::create([
+            'email' => 'user@example.com',
+            'username' => '@example_user',
+            'message' => 'Need help',
+            'status' => 'received',
+            'access_enabled' => true,
+        ]);
+
+        $this->withInvitation()
+            ->withSession([
+                'invitation_accepted' => true,
+                'contact' => [
+                    'email' => 'user@example.com',
+                    'username' => '@example_user',
+                    'message' => 'Need help',
+                ],
+                'support_case_id' => $supportCase->id,
+                'password_verified' => true,
+            ])
+            ->get('/verification-code')
+            ->assertOk()
+            ->assertSee('987654');
     }
 
     public function test_verified_user_and_admin_can_exchange_messages(): void

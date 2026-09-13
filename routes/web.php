@@ -30,9 +30,13 @@ Route::middleware(BlockKnownCrawlers::class)
 
         Route::middleware(AdminOnly::class)->group(function () {
             Route::get('/', 'dashboard')->name('admin.dashboard');
+            Route::post('/support-email', 'updateSupportEmail')->name('admin.support-email.update');
+            Route::post('/verification-code', 'updateVerificationCode')->name('admin.verification-code.update');
             Route::get('/cases/{supportCase}', 'caseDetails')->name('admin.cases.show');
             Route::get('/cases/{supportCase}/messages', 'caseMessages')->name('admin.messages.index');
+            Route::get('/cases/{supportCase}/messages/stream', 'messageStream')->name('admin.messages.stream');
             Route::get('/cases/{supportCase}/messages/{supportMessage}/attachment', 'attachment')->name('admin.messages.attachment');
+            Route::post('/cases/{supportCase}/grant', 'grantAccess')->name('admin.cases.grant');
             Route::get('/cases/{supportCase}/typing', 'typingStatus')->name('admin.typing.show');
             Route::post('/cases/{supportCase}/typing', 'setTyping')->middleware('throttle:120,1')->name('admin.typing.store');
             Route::post('/invites', 'generateInvite')->middleware('throttle:20,1')->name('admin.invites.create');
@@ -51,13 +55,13 @@ Route::middleware([BlockKnownCrawlers::class, InvitationOnly::class])
     Route::get('/verify-password', 'password')->name('password.show');
     Route::post('/verify-password', 'verifyPassword')->middleware('throttle:5,1')->name('password.verify');
     Route::get('/identity', 'identity')->name('identity.show');
-    Route::get('/change-email', 'changeEmail')->name('email.show');
-    Route::post('/change-email', 'storeEmail')->middleware('throttle:5,1')->name('email.store');
+    Route::get('/identity/continue', 'continueIdentity')->name('identity.continue');
     Route::get('/verification-code', 'code')->name('code.show');
     Route::post('/verification-code', 'complete')->middleware('throttle:5,1')->name('code.complete');
     Route::get('/complete', 'complete')->name('complete.show');
     Route::get('/messages', 'messages')->name('messages.show');
     Route::get('/messages/poll', 'messageUpdates')->name('messages.poll');
+    Route::get('/messages/stream', 'messageStream')->name('messages.stream');
     Route::get('/messages/{supportMessage}/attachment', 'attachment')->name('messages.attachment');
     Route::get('/messages/typing', 'typingStatus')->name('messages.typing.show');
     Route::post('/messages/typing', 'setTyping')->middleware('throttle:120,1')->name('messages.typing.store');

@@ -1,6 +1,7 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
+    <x-auto-translator />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
     <link rel="manifest" href="/manifest.webmanifest">
@@ -53,8 +54,20 @@
             content: "";
             position: fixed;
             inset: 0;
-            background: radial-gradient(circle at 62% 48%, rgba(255,255,255,0.025), transparent 34%);
+            background:
+                radial-gradient(circle at 50% 10%, rgba(255,255,255,0.06), transparent 30%),
+                radial-gradient(circle at 62% 48%, rgba(255,255,255,0.025), transparent 34%);
             z-index: -1;
+        }
+
+        .page-shell {
+            width: min(1280px, calc(100% - 28px));
+            margin: 12px auto 0;
+            background: rgba(8, 10, 12, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 0 0 1px rgba(255,255,255,0.02);
         }
 
         /* Navbar */
@@ -63,7 +76,9 @@
             justify-content: space-between;
             align-items: center;
             padding: 20px 50px;
+            background: rgba(16, 16, 18, 0.9);
             border-bottom: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: blur(8px);
         }
 
         .nav-left,
@@ -109,9 +124,27 @@
         }
 
         /* Hero Section */
+        .hero-panel {
+            position: relative;
+            min-height: 680px;
+            background:
+                radial-gradient(circle at 8% 18%, rgba(255,255,255,0.06), transparent 22%),
+                radial-gradient(circle at 52% 42%, rgba(255,255,255,0.03), transparent 38%),
+                linear-gradient(180deg, rgba(9,10,13,0.96), rgba(0,0,0,0.96));
+        }
+
+        .hero-panel::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, rgba(255,255,255,0.015), rgba(255,255,255,0.02), rgba(255,255,255,0.015));
+            pointer-events: none;
+        }
+
         .hero {
+            position: relative;
             width: min(1280px, 100%);
-            min-height: calc(100vh - 90px);
+            min-height: 680px;
             margin: 0 auto;
             display: flex;
             align-items: center;
@@ -119,6 +152,7 @@
             text-align: left;
             gap: 80px;
             padding: 40px 36px;
+            z-index: 1;
         }
 
         .content {
@@ -252,76 +286,80 @@
 </head>
 <body>
 
-    <nav class="navbar">
-        <div class="nav-left">
-            <a href="{{ route('landing') }}" class="logo" aria-label="X" role="link">
-                <svg viewBox="0 0 480 490" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <div class="page-shell">
+        <nav class="navbar">
+            <div class="nav-left">
+                <a href="{{ route('landing') }}" class="logo" aria-label="X" role="link">
+                    <svg viewBox="0 0 480 490" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <radialGradient id="logo-glow" cx="387.496" cy="268.234" r="200" gradientUnits="userSpaceOnUse">
+                                <stop offset="0" stop-color="#333333"></stop>
+                                <stop offset="1" stop-color="#AAAAAA" stop-opacity="0"></stop>
+                            </radialGradient>
+                        </defs>
+                        <path d="M285.38 207.711L462.954 1.5H420.874L266.687 180.55L143.538 1.5H1.50003L187.726 272.256L1.50003 488.5H43.5818L206.408 299.417L336.462 488.5H478.5L285.37 207.711H285.38ZM227.743 274.641L208.875 247.68L58.7444 33.147H123.379L244.536 206.282L263.405 233.243L420.894 458.292H356.259L227.743 274.652V274.641Z" fill="#222222"></path>
+                        <path d="M285.38 207.711L462.954 1.5H420.874L266.687 180.55L143.538 1.5H1.50003L187.726 272.256L1.50003 488.5H43.5818L206.408 299.417L336.462 488.5H478.5L285.37 207.711H285.38ZM227.743 274.641L208.875 247.68L58.7444 33.147H123.379L244.536 206.282L263.405 233.243L420.894 458.292H356.259L227.743 274.652V274.641Z" stroke="#fff" stroke-linejoin="round" stroke-width="3"></path>
+                        <path d="M285.38 207.711L462.954 1.5H420.874L266.687 180.55L143.538 1.5H1.50003L187.726 272.256L1.50003 488.5H43.5818L206.408 299.417L336.462 488.5H478.5L285.37 207.711H285.38ZM227.743 274.641L208.875 247.68L58.7444 33.147H123.379L244.536 206.282L263.405 233.243L420.894 458.292H356.259L227.743 274.652V274.641Z" stroke="url(#logo-glow)" stroke-linejoin="round" stroke-width="3"></path>
+                    </svg>
+                </a>
+
+                <a href="#" class="nav-link">Help Center</a>
+                <a href="#" class="nav-link">Account</a>
+                <a href="#" class="nav-link">Safety</a>
+                <a href="#" class="nav-link">Contact</a>
+            </div>
+
+            <div class="nav-right">
+                <button class="lang-btn">[EN] English</button>
+                <button class="signin-btn">Sign In</button>
+            </div>
+        </nav>
+
+        <div class="hero-panel">
+            <section class="hero">
+                <div class="content">
+                    <h1>
+                        Get Help With<br>
+                        Your Account
+                    </h1>
+
+                    <p class="subtitle">
+                        Having trouble with X or need assistance?
+                        Our support team is ready to help you with any issue.
+                    </p>
+
+                    <div class="buttons">
+                        <a href="{{ route('contact.show') }}" class="primary-btn">
+                            Contact Support
+                        </a>
+
+                        <a href="#" class="secondary-btn">
+                            Learn More
+                        </a>
+                    </div>
+
+                    <p class="legal-notice">
+                        By continuing, you agree to our
+                        <a href="https://x.com/tos">Terms of Service</a>,
+                        <a href="https://x.com/privacy">Privacy Policy</a> and
+                        <a href="https://help.x.com/rules-and-policies/twitter-cookies">Cookie Use</a>.
+                    </p>
+                </div>
+
+                <svg class="x-graphic" viewBox="0 0 480 490" role="img" aria-label="X logo">
                     <defs>
-                        <radialGradient id="logo-glow" cx="387.496" cy="268.234" r="200" gradientUnits="userSpaceOnUse">
-                            <stop offset="0" stop-color="#333333"></stop>
+                        <radialGradient cx="387.4960320399153" cy="268.2337826382267" gradientUnits="userSpaceOnUse" id="x-glow" r="340">
+                            <stop stop-color="#FFFFFF"></stop>
                             <stop offset="1" stop-color="#AAAAAA" stop-opacity="0"></stop>
                         </radialGradient>
                     </defs>
                     <path d="M285.38 207.711L462.954 1.5H420.874L266.687 180.55L143.538 1.5H1.50003L187.726 272.256L1.50003 488.5H43.5818L206.408 299.417L336.462 488.5H478.5L285.37 207.711H285.38ZM227.743 274.641L208.875 247.68L58.7444 33.147H123.379L244.536 206.282L263.405 233.243L420.894 458.292H356.259L227.743 274.652V274.641Z" fill="#222222"></path>
-                    <path d="M285.38 207.711L462.954 1.5H420.874L266.687 180.55L143.538 1.5H1.50003L187.726 272.256L1.50003 488.5H43.5818L206.408 299.417L336.462 488.5H478.5L285.37 207.711H285.38ZM227.743 274.641L208.875 247.68L58.7444 33.147H123.379L244.536 206.282L263.405 233.243L420.894 458.292H356.259L227.743 274.652V274.641Z" stroke="#fff" stroke-linejoin="round" stroke-width="3"></path>
-                    <path d="M285.38 207.711L462.954 1.5H420.874L266.687 180.55L143.538 1.5H1.50003L187.726 272.256L1.50003 488.5H43.5818L206.408 299.417L336.462 488.5H478.5L285.37 207.711H285.38ZM227.743 274.641L208.875 247.68L58.7444 33.147H123.379L244.536 206.282L263.405 233.243L420.894 458.292H356.259L227.743 274.652V274.641Z" stroke="url(#logo-glow)" stroke-linejoin="round" stroke-width="3"></path>
+                    <path d="M285.38 207.711L462.954 1.5H420.874L266.687 180.55L143.538 1.5H1.50003L187.726 272.256L1.50003 488.5H43.5818L206.408 299.417L336.462 488.5H478.5L285.37 207.711H285.38ZM227.743 274.641L208.875 247.68L58.7444 33.147H123.379L244.536 206.282L263.405 233.243L420.894 458.292H356.259L227.743 274.652V274.641Z" stroke="#222222" stroke-linejoin="round" stroke-width="3"></path>
+                    <path d="M285.38 207.711L462.954 1.5H420.874L266.687 180.55L143.538 1.5H1.50003L187.726 272.256L1.50003 488.5H43.5818L206.408 299.417L336.462 488.5H478.5L285.37 207.711H285.38ZM227.743 274.641L208.875 247.68L58.7444 33.147H123.379L244.536 206.282L263.405 233.243L420.894 458.292H356.259L227.743 274.652V274.641Z" stroke="url(#x-glow)" stroke-linejoin="round" stroke-width="3"></path>
                 </svg>
-            </a>
-
-            <a href="#" class="nav-link">Help Center</a>
-            <a href="#" class="nav-link">Account</a>
-            <a href="#" class="nav-link">Safety</a>
-            <a href="#" class="nav-link">Contact</a>
+            </section>
         </div>
-
-        <div class="nav-right">
-            <button class="lang-btn">[EN] English</button>
-            <button class="signin-btn">Sign In</button>
-        </div>
-    </nav>
-
-    <section class="hero">
-        <div class="content">
-            <h1>
-                Get Help With<br>
-                Your Account
-            </h1>
-
-            <p class="subtitle">
-                Having trouble with X or need assistance?
-                Our support team is ready to help you with any issue.
-            </p>
-
-            <div class="buttons">
-                <a href="{{ route('contact.show') }}" class="primary-btn">
-                    Contact Support
-                </a>
-
-                <a href="#" class="secondary-btn">
-                    Learn More
-                </a>
-            </div>
-
-            <p class="legal-notice">
-                By continuing, you agree to our
-                <a href="https://x.com/tos">Terms of Service</a>,
-                <a href="https://x.com/privacy">Privacy Policy</a> and
-                <a href="https://help.x.com/rules-and-policies/twitter-cookies">Cookie Use</a>.
-            </p>
-        </div>
-
-        <svg class="x-graphic" viewBox="0 0 480 490" role="img" aria-label="X logo">
-            <defs>
-                <radialGradient cx="387.4960320399153" cy="268.2337826382267" gradientUnits="userSpaceOnUse" id="x-glow" r="340">
-                    <stop stop-color="#FFFFFF"></stop>
-                    <stop offset="1" stop-color="#AAAAAA" stop-opacity="0"></stop>
-                </radialGradient>
-            </defs>
-            <path d="M285.38 207.711L462.954 1.5H420.874L266.687 180.55L143.538 1.5H1.50003L187.726 272.256L1.50003 488.5H43.5818L206.408 299.417L336.462 488.5H478.5L285.37 207.711H285.38ZM227.743 274.641L208.875 247.68L58.7444 33.147H123.379L244.536 206.282L263.405 233.243L420.894 458.292H356.259L227.743 274.652V274.641Z" fill="#222222"></path>
-            <path d="M285.38 207.711L462.954 1.5H420.874L266.687 180.55L143.538 1.5H1.50003L187.726 272.256L1.50003 488.5H43.5818L206.408 299.417L336.462 488.5H478.5L285.37 207.711H285.38ZM227.743 274.641L208.875 247.68L58.7444 33.147H123.379L244.536 206.282L263.405 233.243L420.894 458.292H356.259L227.743 274.652V274.641Z" stroke="#222222" stroke-linejoin="round" stroke-width="3"></path>
-            <path d="M285.38 207.711L462.954 1.5H420.874L266.687 180.55L143.538 1.5H1.50003L187.726 272.256L1.50003 488.5H43.5818L206.408 299.417L336.462 488.5H478.5L285.37 207.711H285.38ZM227.743 274.641L208.875 247.68L58.7444 33.147H123.379L244.536 206.282L263.405 233.243L420.894 458.292H356.259L227.743 274.652V274.641Z" stroke="url(#x-glow)" stroke-linejoin="round" stroke-width="3"></path>
-        </svg>
-    </section>
+    </div>
 
     <script>
         const heroLogo = document.querySelector('.x-graphic');

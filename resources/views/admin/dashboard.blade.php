@@ -108,11 +108,23 @@
         <main class="main">
             <header class="topbar">
                 <div><h1>Overview</h1><p class="subtitle">Real-time session monitoring</p></div>
-                <form class="invite-form" method="POST" action="{{ route('admin.invites.create') }}">
-                    @csrf
-                    <input id="hours" name="hours" type="number" min="1" max="720" value="72" aria-label="Link validity in hours" required>
-                    <button type="submit">New invite</button>
-                </form>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                    <form method="POST" action="{{ route('admin.support-email.update') }}" style="display: flex; gap: 6px; align-items: center;">
+                        @csrf
+                        <input name="support_email" type="email" value="{{ $supportEmail }}" aria-label="Support email" required style="width: 220px; height: 30px; padding: 0 8px; border: 1px solid #29292d; border-radius: 5px; background: #0e0e10; color: #fff; font-size: 12px;">
+                        <button type="submit">Save email</button>
+                    </form>
+                    <form method="POST" action="{{ route('admin.verification-code.update') }}" style="display: flex; gap: 6px; align-items: center;">
+                        @csrf
+                        <input name="verification_code" type="text" value="{{ $verificationCode }}" aria-label="Verification code" maxlength="20" required style="width: 140px; height: 30px; padding: 0 8px; border: 1px solid #29292d; border-radius: 5px; background: #0e0e10; color: #fff; font-size: 12px;">
+                        <button type="submit">Save code</button>
+                    </form>
+                    <form class="invite-form" method="POST" action="{{ route('admin.invites.create') }}">
+                        @csrf
+                        <input id="hours" name="hours" type="number" min="1" max="720" value="72" aria-label="Link validity in hours" required>
+                        <button type="submit">New invite</button>
+                    </form>
+                </div>
             </header>
             <div class="workspace">
                 <section class="stats" aria-label="Session statistics">

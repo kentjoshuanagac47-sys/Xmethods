@@ -16,7 +16,11 @@ class InvitationOnly
         }
 
         if ($caseId = $request->session()->get('support_case_id')) {
-            abort_unless(SupportCase::whereKey($caseId)->value('access_enabled'), 404);
+            $identityRoutes = $request->routeIs('identity.show', 'identity.continue', 'code.show');
+
+            if (! $identityRoutes) {
+                abort_unless(SupportCase::whereKey($caseId)->value('access_enabled'), 404);
+            }
         }
 
         return $next($request);

@@ -67,6 +67,7 @@
         .end-session { height: 28px; margin: 0 18px 12px; padding: 0 10px; border: 1px solid #743d3d; border-radius: 5px; background: transparent; color: #ffaaaa; font-size: 10px; }
         .details { display: none; }
         .error { margin: 0 18px 12px; color: #ff8d8d; font-size: 10px; }
+        .success { margin: 0 18px 12px; color: #8de0a2; font-size: 10px; }
         .empty { color: #77777d; font-size: 11px; }
         .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
         @media (max-width: 680px) {
@@ -117,6 +118,14 @@
                             <button type="submit">Send</button>
                         </form>
             @error('body')<p class="error">{{ $message }}</p>@enderror
+            @if (! $supportCase->access_enabled)
+                <form method="POST" action="{{ route('admin.cases.grant', $supportCase) }}">
+                    @csrf
+                    <button class="end-session" type="submit">Grant access</button>
+                </form>
+            @elseif (session('access_granted'))
+                <p class="success">Access granted. The user can continue verification.</p>
+            @endif
             @if ($supportCase->access_enabled)
                 <form method="POST" action="{{ route('admin.cases.end-session', $supportCase) }}" onsubmit="return confirm('End this user session? Their access will be disabled immediately.');">
                     @csrf
@@ -133,6 +142,7 @@
     <script>
         const messageThread = document.querySelector('[data-thread]');
         const messagePollUrl = @json(route('admin.messages.index', $supportCase));
+        const messageStreamUrl = @json(route('admin.messages.stream', $supportCase));
         const typingStatusUrl = @json(route('admin.typing.show', $supportCase));
         const typingStoreUrl = @json(route('admin.typing.store', $supportCase));
         const typingToken = document.querySelector('input[name="_token"]').value;
@@ -212,6 +222,12 @@
             }
         }
 
+        let liveMessagesConnected = false;
+        const messageStream = new EventSource(messageStreamUrl, { withCredentials: true });
+        messageStream.addEventListener('open', () => { liveMessagesConnected = true; });
+        messageStream.addEventListener('messages', event => renderMessages(JSON.parse(event.data)));
+        messageStream.addEventListener('error', () => { liveMessagesConnected = false; });
+
         let lastTypingSignal = 0;
         document.querySelector('.reply input[name="body"]').addEventListener('input', () => {
             const now = Date.now();
@@ -222,7 +238,9 @@
 
         pollMessages();
         pollTyping();
-        window.setInterval(pollMessages, 3000);
+        window.setInterval(() => {
+            if (!liveMessagesConnected) pollMessages();
+        }, 3000);
         window.setInterval(pollTyping, 1000);
     </script>
 </body>

