@@ -38,7 +38,7 @@
         .conversation strong { display: block; overflow: hidden; color: #e2e2e5; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
         .conversation span { display: block; margin-top: 3px; overflow: hidden; color: #77777d; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
         .unread { width: 6px; height: 6px; margin-left: auto; border-radius: 50%; background: var(--pink); }
-        .chat { display: grid; grid-template-rows: 57px minmax(0, 1fr) 54px; min-width: 0; }
+        .chat { display: grid; grid-template-rows: 57px minmax(0, 1fr) auto; min-width: 0; min-height: 0; }
         .chat-header { display: flex; align-items: center; justify-content: space-between; padding: 0 18px; border-bottom: 1px solid var(--line); }
         .chat-header h2 { margin: 0 0 4px; font-size: 12px; }
         .chat-header p { margin: 0; color: var(--muted); font-size: 9px; }
@@ -54,6 +54,7 @@
         .typing-indicator span:nth-child(3) { animation-delay: .3s; }
         @keyframes typing-dot { 0%, 60%, 100% { opacity: .3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-2px); } }
         .reply { display: flex; gap: 8px; align-items: center; margin: 0 12px 12px; padding: 0 10px; border: 1px solid #29292d; border-radius: 7px; background: #0e0e10; }
+        .chat > div:last-child { min-height: 0; }
         .reply input { flex: 1; min-width: 0; height: 38px; padding: 0; border: 0; outline: 0; background: transparent; color: #fff; font-size: 12px; }
         .reply input[type="file"] { display: none; }
         .attach { display: grid; width: 22px; height: 22px; place-items: center; color: #aaa; cursor: pointer; font-size: 17px; }
